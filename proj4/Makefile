@@ -1,104 +1,97 @@
 CXX = g++
 
-CXX_FLAGS = -std=gnu++17 -I $(INC_DIR) -I $(GTEST_HEADER_DIR) -I ${LEXPAT_HEADER_DIR}
-LDFLAGS = -L $(GTEST_LIB_DIR) -lgtest -lgtest_main -lpthread
-XMLFLAGS = -L ${GTEST_LIB_DIR} -L ${LEXPAT_LIB_DIR} -lgtest -lgtest_main -lpthread -lexpat
+OBJ = ./obj
+BIN = ./bin
+INC = ./include
+SRC = ./src
+TESTSRC = ./testsrc
 
-GTEST_HEADER_DIR = ../../googletest/googletest/include
-# ./opt/local/include
-GTEST_LIB_DIR = ../../googletest/googletest/lib
-# ./opt/local/include
-LEXPAT_HEADER_DIR = ../../../../../usr/local/include
-LEXPAT_LIB_DIR = ../../../../../usr/local/lib
-OBJ_DIR = ./obj
-BIN_DIR = ./bin
-INC_DIR = ./include
-SRC_DIR = ./src
-TESTSRC_DIR = ./testsrc
+CXXFLAGS = -std=c++17 -I $(INC) -I /opt/local/include
+LDFLAGS = -L /opt/local/lib -lgtest -lgtest_main -lpthread -lexpat 
 
 all: create_dirs run
 
-run: $(BIN_DIR)/teststrutils $(BIN_DIR)/teststrdatasource $(BIN_DIR)/teststrdatasink $(BIN_DIR)/testdsv $(BIN_DIR)/testxml ${BIN_DIR}/testcsvbs ${BIN_DIR}/testosm
-	$(BIN_DIR)/teststrutils && $(BIN_DIR)/teststrdatasource && $(BIN_DIR)/teststrdatasink && $(BIN_DIR)/testdsv && $(BIN_DIR)/testxml && ${BIN_DIR}/testcsvbs && ${BIN_DIR}/testosm
+run: $(BIN)/teststrutils $(BIN)/teststrdatasource $(BIN)/teststrdatasink $(BIN)/testdsv $(BIN)/testxml $(BIN)/testcsvb  $(BIN)/testosm
+	$(BIN)/teststrutils && $(BIN)/teststrdatasource && $(BIN)/teststrdatasink && $(BIN)/testdsv && $(BIN)/testxml && $(BIN)/testcsvb && $(BIN)/testosm
 
-# Executables for DSV, XML, STRUTILS, STRDATASRC, & STRDATASINK
-$(BIN_DIR)/testcsvbs: $(OBJ_DIR)/CSVBusSystem.o $(OBJ_DIR)/CSVBusSystemTest.o $(OBJ_DIR)/DSV_Reader.o ${OBJ_DIR}/StrUtils.o ${OBJ_DIR}/StrDataSource.o
-	$(CXX) -o $(BIN_DIR)/testcsvbs $(OBJ_DIR)/CSVBusSystem.o $(OBJ_DIR)/CSVBusSystemTest.o $(OBJ_DIR)/DSV_Reader.o ${OBJ_DIR}/StrUtils.o ${OBJ_DIR}/StrDataSource.o $(LDFLAGS)
+# Executables
+$(BIN)/testcsvb: $(OBJ)/CSVBusSystem.o $(OBJ)/CSVBusSystemTest.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSource.o
+	$(CXX) -o $(BIN)/testcsvb $(OBJ)/CSVBusSystem.o $(OBJ)/CSVBusSystemTest.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSource.o $(LDFLAGS)
 
-$(BIN_DIR)/testosm: $(OBJ_DIR)/OpenStreetMap.o $(OBJ_DIR)/OpenStreetMapTest.o $(OBJ_DIR)/XML_Reader.o ${OBJ_DIR}/StrDataSource.o
-	$(CXX) -o $(BIN_DIR)/testosm $(OBJ_DIR)/OpenStreetMap.o $(OBJ_DIR)/OpenStreetMapTest.o $(OBJ_DIR)/XML_Reader.o ${OBJ_DIR}/StrDataSource.o $(XMLFLAGS)
+$(BIN)/testosm: $(OBJ)/OpenStreetMap.o $(OBJ)/OSMTest.o $(OBJ)/XML_Reader.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o
+	$(CXX) -o $(BIN)/testosm $(OBJ)/OpenStreetMap.o $(OBJ)/OSMTest.o $(OBJ)/StrDataSource.o $(OBJ)/XML_Reader.o $(OBJ)/StrUtils.o $(LDFLAGS)
 
-$(BIN_DIR)/testdsv: $(OBJ_DIR)/DSV_Reader.o $(OBJ_DIR)/DSV_Writer.o ${OBJ_DIR}/DSV_Test.o ${OBJ_DIR}/StrUtils.o ${OBJ_DIR}/StrDataSink.o ${OBJ_DIR}/StrDataSource.o
-	$(CXX) -o $(BIN_DIR)/testdsv $(OBJ_DIR)/DSV_Reader.o $(OBJ_DIR)/DSV_Writer.o $(OBJ_DIR)/DSV_Test.o ${OBJ_DIR}/StrUtils.o ${OBJ_DIR}/StrDataSink.o ${OBJ_DIR}/StrDataSource.o $(LDFLAGS)
+$(BIN)/testdsv: $(OBJ)/DSV_Reader.o $(OBJ)/DSV_Writer.o $(OBJ)/DSV_Test.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o
+	$(CXX) -o $(BIN)/testdsv $(OBJ)/DSV_Reader.o $(OBJ)/DSV_Writer.o $(OBJ)/DSV_Test.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o $(LDFLAGS)
 
-$(BIN_DIR)/testxml: $(OBJ_DIR)/XML_Reader.o $(OBJ_DIR)/XML_Writer.o ${OBJ_DIR}/XML_Test.o ${OBJ_DIR}/StrUtils.o ${OBJ_DIR}/StrDataSink.o ${OBJ_DIR}/StrDataSource.o
-	$(CXX) -o $(BIN_DIR)/testxml $(OBJ_DIR)/XML_Reader.o $(OBJ_DIR)/XML_Writer.o $(OBJ_DIR)/XML_Test.o ${OBJ_DIR}/StrUtils.o ${OBJ_DIR}/StrDataSink.o ${OBJ_DIR}/StrDataSource.o $(XMLFLAGS)
+$(BIN)/testxml: $(OBJ)/XML_Reader.o $(OBJ)/XML_Writer.o $(OBJ)/XML_Test.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o
+	$(CXX) -o $(BIN)/testxml $(OBJ)/XML_Reader.o $(OBJ)/XML_Writer.o $(OBJ)/XML_Test.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o $(LDFLAGS)
 
-$(BIN_DIR)/teststrutils: $(OBJ_DIR)/TestStrUtils.o $(OBJ_DIR)/StrUtils.o
-	$(CXX) -o $(BIN_DIR)/teststrutils $(OBJ_DIR)/TestStrUtils.o $(OBJ_DIR)/StrUtils.o $(LDFLAGS)
+$(BIN)/teststrutils: $(OBJ)/TestStrUtils.o $(OBJ)/StrUtils.o
+	$(CXX) -o $(BIN)/teststrutils $(OBJ)/TestStrUtils.o $(OBJ)/StrUtils.o $(LDFLAGS)
 
-$(BIN_DIR)/teststrdatasource: $(OBJ_DIR)/StrDataSource.o $(OBJ_DIR)/StrDataSourceTest.o ${OBJ_DIR}/StrUtils.o
-	$(CXX) -o $(BIN_DIR)/teststrdatasource $(OBJ_DIR)/StrDataSource.o $(OBJ_DIR)/StrDataSourceTest.o ${OBJ_DIR}/StrUtils.o $(LDFLAGS)
+$(BIN)/teststrdatasource: $(OBJ)/StrDataSource.o $(OBJ)/StrDataSourceTest.o
+	$(CXX) -o $(BIN)/teststrdatasource $(OBJ)/StrDataSource.o $(OBJ)/StrDataSourceTest.o $(LDFLAGS)
 
-$(BIN_DIR)/teststrdatasink: $(OBJ_DIR)/StrDataSink.o $(OBJ_DIR)/StrDataSinkTest.o ${OBJ_DIR}/StrUtils.o
-	$(CXX) -o $(BIN_DIR)/teststrdatasink $(OBJ_DIR)/StrDataSink.o $(OBJ_DIR)/StrDataSinkTest.o ${OBJ_DIR}/StrUtils.o $(LDFLAGS)
+$(BIN)/teststrdatasink: $(OBJ)/StrDataSink.o $(OBJ)/StrDataSinkTest.o
+	$(CXX) -o $(BIN)/teststrdatasink $(OBJ)/StrDataSink.o $(OBJ)/StrDataSinkTest.o $(LDFLAGS)
 
 # DSV/XML Reader & Writer Object Files: Takes in src & header files
-$(OBJ_DIR)/CSVBusSystem.o: $(SRC_DIR)/CSVBusSystem.cpp $(INC_DIR)/CSVBusSystem.h $(INC_DIR)/BusSystem.h $(INC_DIR)/DSVReader.h ${INC_DIR}/DataSource.h ${INC_DIR}/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/CSVBusSystem.o $(CXX_FLAGS) -c $(SRC_DIR)/CSVBusSystem.cpp
+$(OBJ)/CSVBusSystem.o: $(SRC)/CSVBusSystem.cpp $(INC)/CSVBusSystem.h $(INC)/BusSystem.h $(INC)/DSVReader.h ${INC}/StringUtils.h
+	$(CXX) -o $(OBJ)/CSVBusSystem.o $(CXXFLAGS) -c $(SRC)/CSVBusSystem.cpp
 
-$(OBJ_DIR)/OpenStreetMap.o: $(SRC_DIR)/OpenStreetMap.cpp ${INC_DIR}/OpenStreetMap.h $(INC_DIR)/StreetMap.h $(INC_DIR)/XMLReader.h
-	$(CXX) -o $(OBJ_DIR)/OpenStreetMap.o $(CXX_FLAGS) -c $(SRC_DIR)/OpenStreetMap.cpp
+$(OBJ)/OpenStreetMap.o: $(SRC)/OpenStreetMap.cpp $(INC)/OpenStreetMap.h $(INC)/StreetMap.h $(INC)/XMLReader.h
+	$(CXX) -o $(OBJ)/OpenStreetMap.o $(CXXFLAGS) -c $(SRC)/OpenStreetMap.cpp
 
-$(OBJ_DIR)/DSV_Reader.o: $(SRC_DIR)/DSVReader.cpp $(INC_DIR)/DataSource.h $(INC_DIR)/DSVReader.h ${INC_DIR}/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/DSV_Reader.o $(CXX_FLAGS) -c $(SRC_DIR)/DSVReader.cpp
+$(OBJ)/DSV_Reader.o: $(SRC)/DSVReader.cpp $(INC)/DSVReader.h $(INC)/DataSource.h $(INC)/StringUtils.h
+	$(CXX) -o $(OBJ)/DSV_Reader.o $(CXXFLAGS) -c $(SRC)/DSVReader.cpp
 
-$(OBJ_DIR)/DSV_Writer.o: $(SRC_DIR)/DSVWriter.cpp $(INC_DIR)/DataSink.h $(INC_DIR)/DSVWriter.h ${INC_DIR}/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/DSV_Writer.o $(CXX_FLAGS) -c $(SRC_DIR)/DSVWriter.cpp
+$(OBJ)/DSV_Writer.o: $(SRC)/DSVWriter.cpp $(INC)/DSVWriter.h  $(INC)/DataSink.h $(INC)/StringUtils.h
+	$(CXX) -o $(OBJ)/DSV_Writer.o $(CXXFLAGS) -c $(SRC)/DSVWriter.cpp
 
-$(OBJ_DIR)/XML_Reader.o: $(SRC_DIR)/XMLReader.cpp $(INC_DIR)/DataSource.h $(INC_DIR)/XMLReader.h $(INC_DIR)/XMLEntity.h ${INC_DIR}/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/XML_Reader.o $(CXX_FLAGS) -c $(SRC_DIR)/XMLReader.cpp
+$(OBJ)/XML_Reader.o: $(SRC)/XMLReader.cpp $(INC)/DataSource.h $(INC)/XMLReader.h $(INC)/XMLEntity.h
+	$(CXX) -o $(OBJ)/XML_Reader.o $(CXXFLAGS) -c $(SRC)/XMLReader.cpp
 
-$(OBJ_DIR)/XML_Writer.o: $(SRC_DIR)/XMLWriter.cpp $(INC_DIR)/DataSink.h $(INC_DIR)/XMLWriter.h $(INC_DIR)/XMLEntity.h ${INC_DIR}/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/XML_Writer.o $(CXX_FLAGS) -c $(SRC_DIR)/XMLWriter.cpp
+$(OBJ)/XML_Writer.o: $(SRC)/XMLWriter.cpp $(INC)/DataSink.h $(INC)/XMLWriter.h $(INC)/XMLEntity.h $(INC)/StringUtils.h
+	$(CXX) -o $(OBJ)/XML_Writer.o $(CXXFLAGS) -c $(SRC)/XMLWriter.cpp
 
 # DSV & XML Tests: Takes in testsrc & header files
-$(OBJ_DIR)/CSVBusSystemTest.o: $(TESTSRC_DIR)/CSVBusSystemTest.cpp ${INC_DIR}/CSVBusSystem.h $(INC_DIR)/BusSystem.h $(INC_DIR)/DSVReader.h ${INC_DIR}/DataSource.h ${INC_DIR}/StringDataSource.h
-	$(CXX) -o $(OBJ_DIR)/CSVBusSystemTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/CSVBusSystemTest.cpp
+$(OBJ)/CSVBusSystemTest.o: $(TESTSRC)/CSVBusSystemTest.cpp $(INC)/CSVBusSystem.h $(INC)/BusSystem.h $(INC)/DSVReader.h $(INC)/StringDataSource.h
+	$(CXX) -o $(OBJ)/CSVBusSystemTest.o $(CXXFLAGS) -c $(TESTSRC)/CSVBusSystemTest.cpp
 
-$(OBJ_DIR)/OpenStreetMapTest.o: $(TESTSRC_DIR)/OpenStreetMapTest.cpp ${INC_DIR}/OpenStreetMap.h $(INC_DIR)/StreetMap.h $(INC_DIR)/XMLReader.h ${INC_DIR}/StringDataSource.h ${INC_DIR}/DataSource.h
-	$(CXX) -o $(OBJ_DIR)/OpenStreetMapTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/OpenStreetMapTest.cpp
+$(OBJ)/OSMTest.o: $(TESTSRC)/OSMTest.cpp $(INC)/OpenStreetMap.h $(INC)/StreetMap.h $(INC)/XMLReader.h $(INC)/StringDataSource.h
+	$(CXX) -o $(OBJ)/OSMTest.o $(CXXFLAGS) -c $(TESTSRC)/OSMTest.cpp
 
-${OBJ_DIR}/DSV_Test.o: ${TESTSRC_DIR}/DSVTest.cpp ${INC_DIR}/DSVWriter.h ${INC_DIR}/DSVReader.h ${INC_DIR}/DataSink.h ${INC_DIR}/DataSource.h ${INC_DIR}/StringDataSink.h ${INC_DIR}/StringDataSource.h
-	${CXX} -o ${OBJ_DIR}/DSV_Test.o ${CXX_FLAGS} -c ${TESTSRC_DIR}/DSVTest.cpp
+$(OBJ)/DSV_Test.o: $(TESTSRC)/DSVTest.cpp $(INC)/DSVWriter.h $(INC)/DSVReader.h $(INC)/DataSink.h $(INC)/DataSource.h
+	$(CXX) -o $(OBJ)/DSV_Test.o $(CXXFLAGS) -c $(TESTSRC)/DSVTest.cpp
 
-${OBJ_DIR}/XML_Test.o: ${TESTSRC_DIR}/XMLTest.cpp ${INC_DIR}/XMLWriter.h ${INC_DIR}/XMLReader.h ${INC_DIR}/XMLEntity.h ${INC_DIR}/DataSink.h ${INC_DIR}/DataSource.h ${INC_DIR}/StringDataSink.h ${INC_DIR}/StringDataSource.h
-	${CXX} -o ${OBJ_DIR}/XML_Test.o ${CXX_FLAGS} -c ${TESTSRC_DIR}/XMLTest.cpp
+$(OBJ)/XML_Test.o: $(TESTSRC)/XMLTest.cpp $(INC)/XMLWriter.h $(INC)/XMLReader.h $(INC)/XMLEntity.h $(INC)/DataSink.h $(INC)/DataSource.h
+	$(CXX) -o $(OBJ)/XML_Test.o $(CXXFLAGS) -c $(TESTSRC)/XMLTest.cpp
 
 # StrUtils, StrDataSource, & StrDataSink object & test obj files
-$(OBJ_DIR)/StrUtils.o: $(SRC_DIR)/StringUtils.cpp $(INC_DIR)/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/StrUtils.o $(CXX_FLAGS) -c $(SRC_DIR)/StringUtils.cpp
+$(OBJ)/StrUtils.o: $(SRC)/StringUtils.cpp $(INC)/StringUtils.h
+	$(CXX) -o $(OBJ)/StrUtils.o $(CXXFLAGS) -c $(SRC)/StringUtils.cpp
 
-$(OBJ_DIR)/TestStrUtils.o: $(TESTSRC_DIR)/StringUtilsTest.cpp $(INC_DIR)/StringUtils.h
-	$(CXX) -o $(OBJ_DIR)/TestStrUtils.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/StringUtilsTest.cpp
+$(OBJ)/TestStrUtils.o: $(TESTSRC)/StringUtilsTest.cpp $(INC)/StringUtils.h
+	$(CXX) -o $(OBJ)/TestStrUtils.o $(CXXFLAGS) -c $(TESTSRC)/StringUtilsTest.cpp
 
-$(OBJ_DIR)/StrDataSource.o: $(INC_DIR)/DataSource.h $(INC_DIR)/StringDataSource.h $(SRC_DIR)/StringDataSource.cpp
-	$(CXX) -o $(OBJ_DIR)/StrDataSource.o $(CXX_FLAGS) -c $(SRC_DIR)/StringDataSource.cpp
+$(OBJ)/StrDataSource.o: $(INC)/DataSource.h $(INC)/StringDataSource.h $(SRC)/StringDataSource.cpp
+	$(CXX) -o $(OBJ)/StrDataSource.o $(CXXFLAGS) -c $(SRC)/StringDataSource.cpp
 
-$(OBJ_DIR)/StrDataSourceTest.o: $(INC_DIR)/DataSource.h $(INC_DIR)/StringDataSource.h $(TESTSRC_DIR)/StringDataSourceTest.cpp
-	$(CXX) -o $(OBJ_DIR)/StrDataSourceTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/StringDataSourceTest.cpp
+$(OBJ)/StrDataSourceTest.o: $(INC)/DataSource.h $(INC)/StringDataSource.h $(TESTSRC)/StringDataSourceTest.cpp
+	$(CXX) -o $(OBJ)/StrDataSourceTest.o $(CXXFLAGS) -c $(TESTSRC)/StringDataSourceTest.cpp
 
-$(OBJ_DIR)/StrDataSink.o: $(INC_DIR)/DataSink.h $(INC_DIR)/StringDataSink.h $(SRC_DIR)/StringDataSink.cpp
-	$(CXX) -o $(OBJ_DIR)/StrDataSink.o $(CXX_FLAGS) -c $(SRC_DIR)/StringDataSink.cpp
+$(OBJ)/StrDataSink.o: $(INC)/DataSink.h $(INC)/StringDataSink.h $(SRC)/StringDataSink.cpp
+	$(CXX) -o $(OBJ)/StrDataSink.o $(CXXFLAGS) -c $(SRC)/StringDataSink.cpp
 
-$(OBJ_DIR)/StrDataSinkTest.o: $(INC_DIR)/DataSink.h $(INC_DIR)/StringDataSink.h $(TESTSRC_DIR)/StringDataSinkTest.cpp
-	$(CXX) -o $(OBJ_DIR)/StrDataSinkTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/StringDataSinkTest.cpp
+$(OBJ)/StrDataSinkTest.o: $(INC)/DataSink.h $(INC)/StringDataSink.h $(TESTSRC)/StringDataSinkTest.cpp
+	$(CXX) -o $(OBJ)/StrDataSinkTest.o $(CXXFLAGS) -c $(TESTSRC)/StringDataSinkTest.cpp
 
 create_dirs:
-	mkdir -p $(BIN_DIR)
-	mkdir -p $(OBJ_DIR)
+	mkdir -p $(BIN)
+	mkdir -p $(OBJ)
 
 .PHONY: clean
 
 clean:
-	rm -rf $(BIN_DIR) $(OBJ_DIR)
+	rm -rf $(BIN) $(OBJ)

@@ -2,13 +2,17 @@
 #include "DSVReader.h"
 #include "StringUtils.h"
 #include <iostream>
+#include <unordered_map>
 
 struct CCSVBusSystem::SImplementation {
     public:
         std::shared_ptr<CDSVReader> m_stopsrc, m_routesrc;
+        
         // Holds pointers to total stops & routes
         std::vector<std::shared_ptr<SStop>> t_stops;
+        std::unordered_map<TStopID, std::shared_ptr<SStop>> t_stops_map;
         std::vector<std::shared_ptr<SRoute>> t_routes;
+        std::unordered_map<std::string, std::shared_ptr<SRoute>> t_routes_map;
         
         // Create our own Stop by inherting from SStop
         struct S_Stop: public CBusSystem::SStop {
@@ -80,9 +84,12 @@ struct CCSVBusSystem::SImplementation {
                 std::vector<std::string> s_row;
                 m_stopsrc -> ReadRow(s_row);
 
-                // Creates new Stop & pushes into total stops vector
-                t_stops.push_back(std::make_shared<S_Stop>(S_Stop((TStopID) std::stoi(s_row.at(0)), 
-                                 (CStreetMap::TNodeID) std::stoi(s_row.at(1)))));
+                auto tmp = std::make_shared<S_Stop>(S_Stop((TStopID) std::stoi(s_row.at(0)), 
+                            (CStreetMap::TNodeID) std::stoi(s_row.at(1))));
+
+                // Creates new Stop & pushes into stops map and stops vector
+                t_stops_map[(TStopID) std::stoi(s_row.at(0))] = tmp;
+                t_stops.push_back(tmp);
             }
             
             // Store route name & stops for that route
@@ -110,7 +117,11 @@ struct CCSVBusSystem::SImplementation {
                 // Push back prior route & stops
                 // Keep track of new route name + clear old stops --> Add new route stop
                 else {
-                    t_routes.push_back(std::make_shared<S_Route>(S_Route(r_name, r_stops)));
+
+                    auto tmp = std::make_shared<S_Route>(S_Route(r_name, r_stops));
+
+                    t_routes.push_back(tmp);
+                    t_routes_map[r_name] = tmp;
                     r_name = r_row.at(0);
                     r_stops.clear();
                     r_stops.push_back((TStopID) std::stoi(r_row.at(1)));
@@ -119,7 +130,11 @@ struct CCSVBusSystem::SImplementation {
             // Pushes current route even if a new route is not encountered & we reach the end
             // Clears name & stops
             if (r_name != "" && r_stops.size()) {
-                t_routes.push_back(std::make_shared<S_Route>(S_Route(r_name, r_stops)));
+
+                auto tmp = std::make_shared<S_Route>(S_Route(r_name, r_stops));
+
+                t_routes.push_back(tmp);
+                t_routes_map[r_name] = tmp;
                 r_name.clear();
                 r_stops.clear();
             }
@@ -154,14 +169,11 @@ std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByIndex(std::size_t index)
 }
 
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByID(CBusSystem::TStopID id) const noexcept {
-    // Goes through stops & checks if the id is equal to queried id
     // Return the stop if found else nullptr
-    for (int i = 0; i < DImplementation -> t_stops.size(); i++){
-        if (DImplementation -> t_stops[i] -> ID() == id) {
-            return DImplementation -> t_stops[i];
-        }
+    if(DImplementation->t_stops_map.find(id) == DImplementation->t_stops_map.end()) {
+        return nullptr;
     }
-    return nullptr;
+    return DImplementation->t_stops_map[id];
 }
 
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t index) const noexcept {
@@ -174,12 +186,11 @@ std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t inde
 }
 
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string &name) const noexcept {
-    // Goes through routes & looks for queried name
     // Returns route if found else nullptr
-    for (int j = 0; j < DImplementation -> t_routes.size(); j++) {
-        if (DImplementation -> t_routes[j] -> Name() == name) {
-            return DImplementation -> t_routes[j];
-        }
+
+    if(DImplementation->t_routes_map.find(name) == DImplementation->t_routes_map.end()) {
+        return nullptr;
     }
-    return nullptr;
+    return DImplementation->t_routes_map[name];
+
 }

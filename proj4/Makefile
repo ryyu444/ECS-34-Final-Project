@@ -11,10 +11,22 @@ LDFLAGS = -L /opt/local/lib -lgtest -lgtest_main -lpthread -lexpat
 
 all: create_dirs run
 
-run: $(BIN)/teststrutils $(BIN)/teststrdatasource $(BIN)/teststrdatasink $(BIN)/testdsv $(BIN)/testxml $(BIN)/testcsvb  $(BIN)/testosm
-	$(BIN)/teststrutils && $(BIN)/teststrdatasource && $(BIN)/teststrdatasink && $(BIN)/testdsv && $(BIN)/testxml && $(BIN)/testcsvb && $(BIN)/testosm
+run: $(BIN)/teststrutils $(BIN)/teststrdatasource $(BIN)/teststrdatasink $(BIN)/testdsv $(BIN)/testxml $(BIN)/testcsvb  $(BIN)/testosm $(BIN)/testdpr $(BIN)/testcsvbsi $(BIN)/testtp
+	$(BIN)/teststrutils && $(BIN)/teststrdatasource && $(BIN)/teststrdatasink && $(BIN)/testdsv && $(BIN)/testxml && $(BIN)/testcsvb && $(BIN)/testosm && $(BIN)/testdpr && $(BIN)/testcsvbsi && $(BIN)/testtp
 
 # Executables
+$(BIN)/testdpr: $(OBJ)/DijkstraPathRouter.o $(OBJ)/DijkstraPathRouterTest.o
+	$(CXX) -o $(BIN)/testdpr $(OBJ)/DijkstraPathRouter.o $(OBJ)/DijkstraPathRouterTest.o $(LDFLAGS)
+
+$(BIN)/testcsvbsi: $(OBJ)/BusSystemIndexer.o $(OBJ)/CSVBusSystemIndexerTest.o $(OBJ)/StrDataSource.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/CSVBusSystem.o
+	$(CXX) -o $(BIN)/testcsvbsi $(OBJ)/BusSystemIndexer.o $(OBJ)/CSVBusSystemIndexerTest.o $(OBJ)/StrDataSource.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/CSVBusSystem.o $(LDFLAGS)
+ 
+$(BIN)/testtp: $(OBJ)/CSVOSMTransportationPlannerTest.o $(OBJ)/DijkstraTransportationPlanner.o $(OBJ)/OpenStreetMap.o $(OBJ)/CSVBusSystem.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/DSV_Reader.o $(OBJ)/GeographicUtils.o
+	$(CXX) -o $(BIN)/testtp $(OBJ)/CSVOSMTransportationPlannerTest.o $(OBJ)/DijkstraTransportationPlanner.o $(OBJ)/OpenStreetMap.o $(OBJ)/CSVBusSystem.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/DSV_Reader.o $(OBJ)/GeographicUtils.o $(LDFLAGS)
+
+# $(BIN)/testtpcl: $(OBJ)/TransportationPlannerCommandLine.o $(OBJ)/TPCommandLineTest.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o $(OBJ)/TransportationPlannerCommandLine.o
+# 	$(CXX) -o $(BIN)/testtpcl $(OBJ)/TransportationPlannerCommandLine.o $(OBJ)/TPCommandLineTest.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o $(OBJ)/TransportationPlannerCommandLine.o $(LDFLAGS)
+
 $(BIN)/testcsvb: $(OBJ)/CSVBusSystem.o $(OBJ)/CSVBusSystemTest.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSource.o
 	$(CXX) -o $(BIN)/testcsvb $(OBJ)/CSVBusSystem.o $(OBJ)/CSVBusSystemTest.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/StrDataSource.o $(LDFLAGS)
 
@@ -37,6 +49,24 @@ $(BIN)/teststrdatasink: $(OBJ)/StrDataSink.o $(OBJ)/StrDataSinkTest.o
 	$(CXX) -o $(BIN)/teststrdatasink $(OBJ)/StrDataSink.o $(OBJ)/StrDataSinkTest.o $(LDFLAGS)
 
 # DSV/XML Reader & Writer Object Files: Takes in src & header files
+$(OBJ)/DijkstraPathRouter.o: $(SRC)/DijkstraPathRouter.cpp $(INC)/DijkstraPathRouter.h $(INC)/PathRouter.h
+	$(CXX) -o $(OBJ)/DijkstraPathRouter.o $(CXXFLAGS) -c $(SRC)/DijkstraPathRouter.cpp
+
+$(OBJ)/BusSystemIndexer.o: $(SRC)/BusSystemIndexer.cpp $(INC)/BusSystemIndexer.h $(INC)/BusSystem.h
+	$(CXX) -o $(OBJ)/BusSystemIndexer.o $(CXXFLAGS) -c $(SRC)/BusSystemIndexer.cpp
+
+$(OBJ)/DijkstraTransportationPlanner.o: $(SRC)/DijkstraTransportationPlanner.cpp $(INC)/DijkstraTransportationPlanner.h $(INC)/TransportationPlanner.h
+	$(CXX) -o $(OBJ)/DijkstraTransportationPlanner.o $(CXXFLAGS) -c $(SRC)/DijkstraTransportationPlanner.cpp
+
+$(OBJ)/GeographicUtils.o: $(SRC)/GeographicUtils.cpp $(INC)/GeographicUtils.h $(INC)/StreetMap.h
+	$(CXX) -o $(OBJ)/GeographicUtils.o $(CXXFLAGS) -c $(SRC)/GeographicUtils.cpp
+
+$(OBJ)/TransportationPlannerCommandLine.o: $(SRC)/TransportationPlannerCommandLine.cpp $(INC)/TransportationPlannerCommandLine.h $(INC)/DataFactory.h
+	$(CXX) -o $(OBJ)/TransportationPlannerCommandLine.o $(CXXFLAGS) -c $(SRC)/TransportationPlannerCommandLine.cpp
+
+# missing still: StandardDataSink, StandardDataSource, StandardErrorDataSink, transplanner, KMLWriter, kmlout, speedtest, 
+# $(OBJ)/StandardDataSink.o: 
+
 $(OBJ)/CSVBusSystem.o: $(SRC)/CSVBusSystem.cpp $(INC)/CSVBusSystem.h $(INC)/BusSystem.h $(INC)/DSVReader.h ${INC}/StringUtils.h
 	$(CXX) -o $(OBJ)/CSVBusSystem.o $(CXXFLAGS) -c $(SRC)/CSVBusSystem.cpp
 
@@ -56,6 +86,18 @@ $(OBJ)/XML_Writer.o: $(SRC)/XMLWriter.cpp $(INC)/DataSink.h $(INC)/XMLWriter.h $
 	$(CXX) -o $(OBJ)/XML_Writer.o $(CXXFLAGS) -c $(SRC)/XMLWriter.cpp
 
 # DSV & XML Tests: Takes in testsrc & header files
+$(OBJ)/DijkstraPathRouterTest.o: $(TESTSRC)/DijkstraPathRouterTest.cpp $(INC)/DijkstraPathRouter.h $(INC)/PathRouter.h
+	$(CXX) -o $(OBJ)/DijkstraPathRouterTest.o $(CXXFLAGS) -c $(TESTSRC)/DijkstraPathRouterTest.cpp
+
+$(OBJ)/CSVBusSystemIndexerTest.o: $(TESTSRC)/CSVBusSystemIndexerTest.cpp $(INC)/BusSystemIndexer.h $(INC)/BusSystem.h $(INC)/DSVReader.h $(INC)/StringDataSource.h $(INC)/StringUtils.h $(INC)/XMLReader.h $(INC)/CSVBusSystem.h $(INC)/DataSource.h
+	$(CXX) -o $(OBJ)/CSVBusSystemIndexerTest.o $(CXXFLAGS) -c $(TESTSRC)/CSVBusSystemIndexerTest.cpp
+
+$(OBJ)/CSVOSMTransportationPlannerTest.o: $(TESTSRC)/CSVOSMTransportationPlannerTest.cpp $(INC)/XMLReader.h $(INC)/StringUtils.h $(INC)/StringDataSource.h $(INC)/OpenStreetMap.h $(INC)/CSVBusSystem.h $(INC)/TransportationPlannerConfig.h $(INC)/GeographicUtils.h
+	$(CXX) -o $(OBJ)/CSVOSMTransportationPlannerTest.o $(CXXFLAGS) -c $(TESTSRC)/CSVOSMTransportationPlannerTest.cpp
+
+$(OBJ)/TPCommandLineTest.o: $(TESTSRC)/TPCommandLineTest.cpp $(INC)/TransportationPlannerCommandLine.h $(INC)/StringDataSink.h $(INC)/StringDataSource.h $(INC)/DataFactory.h $(INC)/TransportationPlanner.h
+	$(CXX) -o $(OBJ)/TPCommandLineTest.o $(CXXFLAGS) -c $(TESTSRC)/TPCommandLineTest.cpp
+
 $(OBJ)/CSVBusSystemTest.o: $(TESTSRC)/CSVBusSystemTest.cpp $(INC)/CSVBusSystem.h $(INC)/BusSystem.h $(INC)/DSVReader.h $(INC)/StringDataSource.h
 	$(CXX) -o $(OBJ)/CSVBusSystemTest.o $(CXXFLAGS) -c $(TESTSRC)/CSVBusSystemTest.cpp
 

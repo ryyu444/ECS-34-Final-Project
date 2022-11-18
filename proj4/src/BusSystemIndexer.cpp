@@ -106,7 +106,8 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
     std::string currRoute = tmpPairs[0].first;
     bool foundSrc = false;
     for(int i = 0; i < tmpPairs.size(); i++) {
-        // std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
+
+        std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
         if(tmpPairs[i].second == stopIDSrc) {
             currRoute = tmpPairs[i].first;
             foundSrc = true;
@@ -116,11 +117,45 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
             foundSrc = false;
             foundRoute = true;
             routes.insert(DImplementation->m_busSystem->RouteByName(tmpPairs[i].first));
+            std::cout << "Found pair\n";
         }
     }
     return foundRoute;
 }
 
 bool CBusSystemIndexer::RouteBetweenNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNodeID dest) const noexcept {
-    return false;
+    CBusSystem::TStopID stopIDSrc = DImplementation->m_stopsByNodeIDMap[src]->ID();
+    CBusSystem::TStopID stopIDDest = DImplementation->m_stopsByNodeIDMap[dest]->ID();
+
+    bool foundRoute = false;
+
+    std::vector<std::pair<std::string, CBusSystem::TStopID>> tmpPairs;
+
+    for(int i = 0; i < RouteCount(); i++) {
+        for(int j = 0; j < DImplementation->m_sortedRoutesByName[i]->StopCount(); j++) {
+            CBusSystem::TStopID tmpStopID = DImplementation->m_sortedRoutesByName[i]->GetStopID(j);
+            std::string tmpRouteName =  DImplementation->m_sortedRoutesByName[i]->Name();
+
+            if((tmpStopID == stopIDSrc || tmpStopID == stopIDDest)) {
+                tmpPairs.push_back({tmpRouteName, tmpStopID});
+            }
+        }
+    }
+    std::string currRoute = tmpPairs[0].first;
+    bool foundSrc = false;
+    for(int i = 0; i < tmpPairs.size(); i++) {
+
+        std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
+        if(tmpPairs[i].second == stopIDSrc) {
+            currRoute = tmpPairs[i].first;
+            foundSrc = true;
+        }
+        // src dest pair found in route
+        else if(foundSrc && tmpPairs[i].second == stopIDDest && tmpPairs[i].first == currRoute) {
+            foundSrc = false;
+            foundRoute = true;
+            std::cout << "Found pair\n";
+        }
+    }
+    return foundRoute;
 }

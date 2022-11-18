@@ -271,13 +271,44 @@ std::string RStrip(const std::string &str) noexcept {
 }
 
 std::string Strip(const std::string &str) noexcept {
-        
-        std::string stripped = str;
+    // Case: Left Side Whitespace - "    dogs" --> "dogs"
+    // Case: Right Side Whitespace - "cats    " --> "cats"
+    // Case: Both Side Whitespace - "    mice    " --> "mice"
+    // Case: No Whitespace - "hamster" --> "hamster"
+    // Case: Empty - "" --> ""
+    
+    if (str == "") {
+        return str;
+    }
 
-        stripped = LStrip(stripped);
-        stripped = RStrip(stripped);
+    std::string newStr;
+    int first_char_idx = 0;
+    int last_char_idx = 0;
+    bool first = false;
 
-        return stripped;
+    // Finds first & last char indices(
+    for (int i = 0; i < (int) str.length(); i++) {
+        if ((str[i] != 32 && str[i] != 9 && str[i] != 10) && !first) {
+            first_char_idx = i;
+            first = true;
+        }
+
+        if (str[i] != 32 && str[i] != 9 && str[i] != 10) {
+            last_char_idx = i;
+        }
+    }
+
+    if (first_char_idx == last_char_idx && (str[first_char_idx] == 32 || str[first_char_idx] == 9 || str[first_char_idx] == 10)) {
+        return "";
+    }
+    
+    // Recreates str w/o left & right whitespace
+    while (first_char_idx <= last_char_idx) {
+        newStr += str[first_char_idx];
+        first_char_idx++;
+    }
+
+    return newStr;
 }
 
 std::string Center(const std::string &str, int width, char fill) noexcept{

@@ -123,6 +123,7 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
     return foundRoute;
 }
 
+// copy pasted from RoutesByNodeIDs minus one line because i am lazy XDDD
 bool CBusSystemIndexer::RouteBetweenNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNodeID dest) const noexcept {
     CBusSystem::TStopID stopIDSrc = DImplementation->m_stopsByNodeIDMap[src]->ID();
     CBusSystem::TStopID stopIDDest = DImplementation->m_stopsByNodeIDMap[dest]->ID();

@@ -43,9 +43,6 @@ struct CBusSystemIndexer::SImplementation {
             }
             std::sort(m_sortedRoutesByName.begin(), m_sortedRoutesByName.end(), compareByName);
 
-
-
-
         };
 };
 
@@ -106,18 +103,16 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
     std::string currRoute = tmpPairs[0].first;
     bool foundSrc = false;
     for(int i = 0; i < tmpPairs.size(); i++) {
-
         std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
         if(tmpPairs[i].second == stopIDSrc) {
             currRoute = tmpPairs[i].first;
             foundSrc = true;
         }
-        // src dest pair found in route
         else if(foundSrc && tmpPairs[i].second == stopIDDest && tmpPairs[i].first == currRoute) {
             foundSrc = false;
             foundRoute = true;
             routes.insert(DImplementation->m_busSystem->RouteByName(tmpPairs[i].first));
-            std::cout << "Found pair\n";
+            std::cout << "Found route passing through src and dest\n";
         }
     }
     return foundRoute;
@@ -145,17 +140,13 @@ bool CBusSystemIndexer::RouteBetweenNodeIDs(CStreetMap::TNodeID src, CStreetMap:
     std::string currRoute = tmpPairs[0].first;
     bool foundSrc = false;
     for(int i = 0; i < tmpPairs.size(); i++) {
-
-        std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
         if(tmpPairs[i].second == stopIDSrc) {
             currRoute = tmpPairs[i].first;
             foundSrc = true;
         }
-        // src dest pair found in route
         else if(foundSrc && tmpPairs[i].second == stopIDDest && tmpPairs[i].first == currRoute) {
             foundSrc = false;
             foundRoute = true;
-            std::cout << "Found pair\n";
         }
     }
     return foundRoute;

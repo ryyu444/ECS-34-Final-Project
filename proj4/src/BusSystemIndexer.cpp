@@ -106,8 +106,9 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
     std::string currRoute = tmpPairs[0].first;
 
     bool foundSrc = false;
+    // std::cout << "num pairs:" << tmpPairs.size() << std::endl;
     for(int i = 0; i < tmpPairs.size(); i++) {
-        std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
+        // std::cout << tmpPairs[i].first << ", " << tmpPairs[i].second << std::endl;
         if(tmpPairs[i].second == stopIDSrc) {
             currRoute = tmpPairs[i].first;
             foundSrc = true;
@@ -116,9 +117,10 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
             foundSrc = false;
             foundRoute = true;
             routes.insert(DImplementation->m_busSystem->RouteByName(tmpPairs[i].first));
-            std::cout << "Found route passing from src to dest\n";
+            // std::cout << "Found route passing from src to dest\n";
         }
     }
+    std::cout << std::endl;
     return foundRoute;
 }
 

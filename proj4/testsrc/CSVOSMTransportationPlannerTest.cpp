@@ -172,7 +172,7 @@ TEST(CSVOSMTransporationPlanner, SimpleTest){
 //     EXPECT_EQ(Planner.FindFastestPath(1,4,BikeFastestPath),ExpectedBikeTime);
 //     EXPECT_EQ(BikeFastestPath,ExpectedBikeFastestPath);
 
-}
+// }
 
 // TEST(CSVOSMTransporationPlanner, PathDescription){
 //     auto InStreamOSM = std::make_shared<CStringDataSource>( "<?xml version='1.0' encoding='UTF-8'?>"
@@ -293,4 +293,4 @@ TEST(CSVOSMTransporationPlanner, SimpleTest){
 //     EXPECT_TRUE(Planner.GetPathDescription(Path3,Description3));
 //     EXPECT_EQ(Description3, ExpectedDescription3);
 
-// }
+}

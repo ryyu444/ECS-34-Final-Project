@@ -95,7 +95,7 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
     for (int i = 0; i < DImplementation -> m_graph.size(); i++) {
         prevVertex.push_back(nullptr);
         visited.push_back(false);
-        distances.push_back(std::numeric_limits<double>::max());
+        distances.push_back(CPathRouter::NoPathExists);
     }
 
     distances[src] = 0;

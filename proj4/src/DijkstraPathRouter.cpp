@@ -9,7 +9,7 @@ struct CDijkstraPathRouter::SImplementation {
         struct SVertex {
             CPathRouter::TVertexID m_id;
             std::any m_tag;
-            std::vector<std::pair<SVertex, std::size_t>> m_adjacents;
+            std::vector<std::pair<std::shared_ptr<SImplementation::SVertex>, std::size_t>> m_adjacents;
 
             SVertex(CPathRouter::TVertexID id, std::any tag) {
                 m_id = id;
@@ -18,7 +18,7 @@ struct CDijkstraPathRouter::SImplementation {
             }
         };
 
-        std::vector<SVertex> m_graph; // collection of all vertices in graph
+        std::vector<std::shared_ptr<SImplementation::SVertex>> m_graph; // collection of all vertices in graph
         
         SImplementation() {
             m_graph = {};
@@ -36,16 +36,17 @@ std::size_t CDijkstraPathRouter::VertexCount() const noexcept {
 }
 
 CPathRouter::TVertexID CDijkstraPathRouter::AddVertex(std::any tag) noexcept {
-    SImplementation::SVertex tmpVertex(DImplementation -> m_graph.size(), tag);
+    std::shared_ptr<SImplementation::SVertex> tmpVertex = 
+        std::make_shared<SImplementation::SVertex>(DImplementation -> m_graph.size(), tag);
     DImplementation -> m_graph.push_back(tmpVertex);
-    return tmpVertex.m_id;
+    return tmpVertex -> m_id;
 }
 
 std::any CDijkstraPathRouter::GetVertexTag(CPathRouter::TVertexID id) const noexcept {
     if(id >= DImplementation -> m_graph.size()) {
         return std::any();
     }
-    return DImplementation -> m_graph[id].m_tag;
+    return DImplementation -> m_graph[id] -> m_tag;
 }
 
 bool CDijkstraPathRouter::AddEdge(CPathRouter::TVertexID src, CPathRouter::TVertexID dest, double weight, bool bidir) noexcept {
@@ -54,9 +55,9 @@ bool CDijkstraPathRouter::AddEdge(CPathRouter::TVertexID src, CPathRouter::TVert
         return false;
     }
     
-    SImplementation::SVertex srcVertex = DImplementation -> m_graph[src];
-    SImplementation::SVertex destVertex = DImplementation -> m_graph[dest];
-    srcVertex.m_adjacents.push_back(std::make_pair(destVertex, weight));
+    std::shared_ptr<SImplementation::SVertex> srcVertex = DImplementation -> m_graph[src];
+    std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_graph[dest];
+    srcVertex -> m_adjacents.push_back(std::make_pair(destVertex, weight));
     
     if (bidir) {
         AddEdge(dest, src, weight, false);
@@ -77,15 +78,16 @@ bool CDijkstraPathRouter::Precompute(std::chrono::steady_clock::time_point deadl
 
 double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRouter::TVertexID dest, std::vector<CPathRouter::TVertexID> &path) noexcept {
 
+    path.clear();
+
     if (src >= DImplementation -> m_graph.size() || dest >= DImplementation -> m_graph.size()) {
         return false;
     }
 
-    SImplementation::SVertex srcVertex = DImplementation -> m_graph[src];
-    SImplementation::SVertex destVertex = DImplementation -> m_graph[dest];
+    std::shared_ptr<SImplementation::SVertex> srcVertex = DImplementation -> m_graph[src];
+    std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_graph[dest];
 
-    std::deque<std::shared_ptr<SImplementation::SVertex>> toVisit = 
-        {std::make_shared<SImplementation::SVertex>(srcVertex)};
+    std::deque<std::shared_ptr<SImplementation::SVertex>> toVisit = {srcVertex};
     std::vector<std::shared_ptr<SImplementation::SVertex>> prevVertex;
     std::vector<bool> visited;
     std::vector<double> distances;
@@ -104,16 +106,16 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
         visited[currVertex->m_id] = true;
 
         for (int j = 0; j < currVertex->m_adjacents.size(); j++) {
-            if (!visited[currVertex->m_adjacents[j].first.m_id]) {
-                toVisit.push_back(std::make_shared<SImplementation::SVertex>(currVertex->m_adjacents[j].first));
+            if (!visited[currVertex->m_adjacents[j].first->m_id]) {
+                toVisit.push_back(currVertex->m_adjacents[j].first);
                 
                 // calculate the distance from cur vertex to the adj
                 double tmpDist = distances[currVertex->m_id] + currVertex->m_adjacents[j].second;
                 
                 // Check if new calculated dist is shorter than existing path to adj vertex
-                if (tmpDist < distances[currVertex->m_adjacents[j].first.m_id]) {
-                    distances[currVertex->m_adjacents[j].first.m_id] = tmpDist;
-                    prevVertex[currVertex->m_adjacents[j].first.m_id] = currVertex;
+                if (tmpDist < distances[currVertex->m_adjacents[j].first->m_id]) {
+                    distances[currVertex->m_adjacents[j].first->m_id] = tmpDist;
+                    prevVertex[currVertex->m_adjacents[j].first->m_id] = currVertex;
                 }
             }
         }

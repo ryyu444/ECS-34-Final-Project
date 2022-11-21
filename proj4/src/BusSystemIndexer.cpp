@@ -5,11 +5,11 @@
 #include <bits/stdc++.h>
 #include <unordered_map>
 
-bool compareByID(std::shared_ptr<CBusSystem::SStop> stop1, std::shared_ptr<CBusSystem::SStop> stop2) {
+bool compareByID(std::shared_ptr<CBusSystem::SStop> &stop1, std::shared_ptr<CBusSystem::SStop> &stop2) {
     return stop1->ID() < stop2->ID();
 }
 
-bool compareByName(std::shared_ptr<CBusSystem::SRoute> route1, std::shared_ptr<CBusSystem::SRoute> route2) {
+bool compareByName(std::shared_ptr<CBusSystem::SRoute> &route1, std::shared_ptr<CBusSystem::SRoute> &route2) {
     return route1->Name().compare(route2->Name()) <= 0 ? true : false;
 }
 

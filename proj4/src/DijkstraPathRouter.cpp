@@ -9,7 +9,7 @@ struct CDijkstraPathRouter::SImplementation {
         struct SVertex {
             CPathRouter::TVertexID m_id;
             std::any m_tag;
-            std::vector<std::pair<std::shared_ptr<SImplementation::SVertex>, std::size_t>> m_adjacents;
+            std::vector<std::pair<std::shared_ptr<SImplementation::SVertex>, double>> m_adjacents;
 
             SVertex(CPathRouter::TVertexID id, std::any tag) {
                 m_id = id;

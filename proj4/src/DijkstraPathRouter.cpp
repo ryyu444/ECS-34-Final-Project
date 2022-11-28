@@ -107,7 +107,6 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
 
         for (int j = 0; j < currVertex->m_adjacents.size(); j++) {
             if (!visited[currVertex->m_adjacents[j].first->m_id]) {
-                toVisit.push_back(currVertex->m_adjacents[j].first);
                 // calculate the distance from cur vertex to the adj
                 double tmpDist = distances[currVertex->m_id] + currVertex->m_adjacents[j].second;
                 
@@ -118,9 +117,10 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
                 }
 
                 // break out early if destination processed
-                if(currVertex->m_adjacents[j].first->m_id == dest) {
-                    break;
-                }
+                // if(currVertex->m_adjacents[j].first->m_id == dest) {
+                //     break;
+                // }
+                toVisit.push_back(currVertex->m_adjacents[j].first);
             }
         }
     }

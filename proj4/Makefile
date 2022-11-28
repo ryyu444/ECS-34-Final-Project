@@ -21,8 +21,8 @@ $(BIN)/testdpr: $(OBJ)/DijkstraPathRouter.o $(OBJ)/DijkstraPathRouterTest.o
 $(BIN)/testcsvbsi: $(OBJ)/BusSystemIndexer.o $(OBJ)/CSVBusSystemIndexerTest.o $(OBJ)/StrDataSource.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/CSVBusSystem.o
 	$(CXX) -o $(BIN)/testcsvbsi $(OBJ)/BusSystemIndexer.o $(OBJ)/CSVBusSystemIndexerTest.o $(OBJ)/StrDataSource.o $(OBJ)/DSV_Reader.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/CSVBusSystem.o $(LDFLAGS)
  
-$(BIN)/testtp: $(OBJ)/CSVOSMTransportationPlannerTest.o $(OBJ)/DijkstraTransportationPlanner.o $(OBJ)/OpenStreetMap.o $(OBJ)/CSVBusSystem.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/DSV_Reader.o $(OBJ)/GeographicUtils.o
-	$(CXX) -o $(BIN)/testtp $(OBJ)/CSVOSMTransportationPlannerTest.o $(OBJ)/DijkstraTransportationPlanner.o $(OBJ)/OpenStreetMap.o $(OBJ)/CSVBusSystem.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/DSV_Reader.o $(OBJ)/GeographicUtils.o $(LDFLAGS)
+$(BIN)/testtp: $(OBJ)/CSVOSMTransportationPlannerTest.o $(OBJ)/DijkstraTransportationPlanner.o $(OBJ)/DijkstraPathRouter.o $(OBJ)/BusSystemIndexer.o $(OBJ)/OpenStreetMap.o $(OBJ)/CSVBusSystem.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/DSV_Reader.o $(OBJ)/GeographicUtils.o
+	$(CXX) -o $(BIN)/testtp $(OBJ)/CSVOSMTransportationPlannerTest.o $(OBJ)/DijkstraTransportationPlanner.o $(OBJ)/DijkstraPathRouter.o $(OBJ)/BusSystemIndexer.o $(OBJ)/OpenStreetMap.o $(OBJ)/CSVBusSystem.o $(OBJ)/StrDataSource.o $(OBJ)/StrUtils.o $(OBJ)/XML_Reader.o $(OBJ)/DSV_Reader.o $(OBJ)/GeographicUtils.o $(LDFLAGS)
 
 $(BIN)/testtpcl: $(OBJ)/TransportationPlannerCommandLine.o $(OBJ)/TPCommandLineTest.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o
 	$(CXX) -o $(BIN)/testtpcl $(OBJ)/TransportationPlannerCommandLine.o $(OBJ)/TPCommandLineTest.o $(OBJ)/StrDataSink.o $(OBJ)/StrDataSource.o $(LDFLAGS)
@@ -55,7 +55,7 @@ $(OBJ)/DijkstraPathRouter.o: $(SRC)/DijkstraPathRouter.cpp $(INC)/DijkstraPathRo
 $(OBJ)/BusSystemIndexer.o: $(SRC)/BusSystemIndexer.cpp $(INC)/BusSystemIndexer.h $(INC)/BusSystem.h
 	$(CXX) -o $(OBJ)/BusSystemIndexer.o $(CXXFLAGS) -c $(SRC)/BusSystemIndexer.cpp
 
-$(OBJ)/DijkstraTransportationPlanner.o: $(SRC)/DijkstraTransportationPlanner.cpp $(INC)/DijkstraTransportationPlanner.h $(INC)/TransportationPlanner.h
+$(OBJ)/DijkstraTransportationPlanner.o: $(SRC)/DijkstraTransportationPlanner.cpp $(INC)/DijkstraTransportationPlanner.h $(INC)/TransportationPlanner.h $(INC)/BusSystemIndexer.h $(INC)/DijkstraPathRouter.h $(INC)/GeographicUtils.h
 	$(CXX) -o $(OBJ)/DijkstraTransportationPlanner.o $(CXXFLAGS) -c $(SRC)/DijkstraTransportationPlanner.cpp
 
 $(OBJ)/GeographicUtils.o: $(SRC)/GeographicUtils.cpp $(INC)/GeographicUtils.h $(INC)/StreetMap.h

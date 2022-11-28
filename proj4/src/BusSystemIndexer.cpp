@@ -124,7 +124,6 @@ bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNo
     return foundRoute;
 }
 
-// copy pasted from RoutesByNodeIDs minus one line because i am lazy XDDD
 bool CBusSystemIndexer::RouteBetweenNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNodeID dest) const noexcept {
     std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> dummyRoutes;
     return RoutesByNodeIDs(src, dest, dummyRoutes);

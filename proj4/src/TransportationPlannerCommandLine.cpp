@@ -1,4 +1,5 @@
 #include "TransportationPlannerCommandLine.h"
+#include <iostream>
 
 struct CTransportationPlannerCommandLine::SImplementation {
 
@@ -8,6 +9,8 @@ struct CTransportationPlannerCommandLine::SImplementation {
         std::shared_ptr<CDataSink> m_errsink;
         std::shared_ptr<CDataFactory> m_results;
         std::shared_ptr<CTransportationPlanner> m_planner;
+        
+        std::vector<std::string> potential_cmds;
 
         SImplementation(
             std::shared_ptr<CDataSource> cmdsrc, 
@@ -22,6 +25,20 @@ struct CTransportationPlannerCommandLine::SImplementation {
                 m_results = results;
                 m_planner = planner;
 
+                std::string tmp_cmd;
+                char tmp_char;
+                while (!m_cmdsrc -> End()) {
+                    m_cmdsrc -> Get(tmp_char);
+                    
+                    if (tmp_char == '\n') {
+                        std::cout << "Potential cmd: " << tmp_cmd << std::endl; 
+                        potential_cmds.push_back(tmp_cmd);
+                        tmp_cmd.clear();
+                        continue;
+                    }
+                    
+                    tmp_cmd += tmp_char;
+                }
             }
 };
 

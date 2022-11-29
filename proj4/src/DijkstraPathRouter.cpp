@@ -88,18 +88,11 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
     std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_graph[dest];
 
     std::deque<std::shared_ptr<SImplementation::SVertex>> toVisit = {srcVertex};
-    std::vector<std::shared_ptr<SImplementation::SVertex>> prevVertex;
-    std::vector<bool> visited;
-    std::vector<double> distances;
-
-    for (int i = 0; i < DImplementation -> m_graph.size(); i++) {
-        prevVertex.push_back(nullptr);
-        visited.push_back(false);
-        distances.push_back(CPathRouter::NoPathExists);
-    }
+    std::vector<std::shared_ptr<SImplementation::SVertex>> prevVertex(DImplementation -> m_graph.size(), nullptr);
+    std::vector<bool> visited(DImplementation -> m_graph.size(), false);
+    std::vector<double> distances(DImplementation -> m_graph.size(), CPathRouter::NoPathExists);
 
     distances[src] = 0;
-
     while (!toVisit.empty()) {
         std::shared_ptr<SImplementation::SVertex> currVertex = toVisit.front();
         toVisit.pop_front();

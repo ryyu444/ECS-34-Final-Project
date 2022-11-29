@@ -162,17 +162,9 @@ double CDijkstraTransportationPlanner::FindFastestPath(CTransportationPlanner::T
         bool checked = false;
     };
 
+    // 💀 this is wrong TODO change XD
     std::unordered_map<CTransportationPlanner::TNodeID, NodeIDDefaultVal> busShortestPathEdgesMap;
     FindShortestPath(src, dest, busShortestPath);
-
-    std::unordered_map<CTransportationPlanner::TNodeID,
-                       std::unordered_map<CTransportationPlanner::TNodeID, 
-                                          std::pair<double, CTransportationPlanner::ETransportationMode>>> transportationModesMap;
-
-                        // 1, 2 (5, Walk) --> {1: {2: (5, Walk)}}
-                        // 1, 3 (2, Bus) --> {1: {2: (5, Walk), 3: (2, Bus)}}
-                        // 1, 2 (3, Bus) --> {1: {2: (3, Bus), 3: (2, Bus)}}
-                        // 2 is in adj list: Check time (3 < 5)
 
     for (int r = 0; r < busShortestPath.size() - 1; r++) {
         CTransportationPlanner::TNodeID curNodeID = busShortestPath[r];
@@ -253,7 +245,7 @@ double CDijkstraTransportationPlanner::FindFastestPath(CTransportationPlanner::T
                                                                 DImplementation -> m_vertexNodesMap[next_nodeID], 
                                                                 walkingTime, true);
 
-            if (transportationModesMap.find(curr_node_ID) != )
+            // if (transportationModesMap[curr_nodeID][nextNodeID])
         }
     }
 
@@ -326,13 +318,33 @@ double CDijkstraTransportationPlanner::FindFastestPath(CTransportationPlanner::T
 
     std::vector<CTransportationPlanner::TTripStep> walkBussingFastestPath;
 
+    CTransportationPlanner::ETransportationMode mode = CTransportationPlanner::ETransportationMode::Walk;
     for (int p = 0; p < walkBussingPath.size(); p++) {
         CTransportationPlanner::TNodeID currNodeID = std::any_cast<CStreetMap::TNodeID>(DImplementation -> m_fastestBusWalkGraph 
                                                                                         -> GetVertexTag(walkBussingPath[p]));
-        CTransportationPlanner::ETransportationMode mode = CTransportationPlanner::ETransportationMode::Walk;
-
+                                                                                        
+        // std::unordered_map<CTransportationPlanner::ETransportationMode, std::string> transportMode = {
+        //     {CTransportationPlanner::ETransportationMode::Walk, "walk"},
+        //     {CTransportationPlanner::ETransportationMode::Bike, "bike"},
+        //     {CTransportationPlanner::ETransportationMode::Bus, "bus"}
+        // };
+        // std::cout << "Mode: " << transportMode[mode] << std::endl;
         walkBussingFastestPath.push_back(CTransportationPlanner::TTripStep(mode, currNodeID));
-        std::cout << "Node ID: " << currNodeID << std::endl;
+
+        // compare walk time and bus time 
+        if (p != walkBussingPath.size() - 1) {
+
+            CTransportationPlanner::TNodeID nextNodeID = std::any_cast<CStreetMap::TNodeID>(DImplementation -> m_fastestBusWalkGraph 
+                                                                                        -> GetVertexTag(walkBussingPath[p+1]));
+            double dist = SGeographicUtils::HaversineDistanceInMiles(DImplementation -> m_streetMap -> NodeByID(currNodeID) -> Location(),
+                                                                     DImplementation -> m_streetMap -> NodeByID(nextNodeID) -> Location());
+            double walkTime = dist / DImplementation -> m_walkSpeedLimit;
+            double busTime = dist / busShortestPathEdgesMap[currNodeID].speedLimit + (DImplementation -> m_busStopTime / 3600);
+
+            mode = walkTime > busTime ? CTransportationPlanner::ETransportationMode::Bus : CTransportationPlanner::ETransportationMode::Walk;
+        }
+
+
     }
     // std::cout << "walk/bus time: " << walkBussingTime << std::endl;
 

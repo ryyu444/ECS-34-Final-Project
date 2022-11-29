@@ -7,7 +7,7 @@ SRC = ./src
 TESTSRC = ./testsrc
 
 CXXFLAGS = -std=c++17 -I $(INC) -I /opt/local/include
-LDFLAGS = -L /opt/local/lib -lgtest -lgmock -lgtest_main -lpthread -lexpat 
+LDFLAGS = -L /opt/local/lib -lgtest -lgmock -lgtest_main -lpthread -lexpat
 
 all: create_dirs run
 

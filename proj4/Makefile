@@ -188,4 +188,7 @@ create_dirs:
 .PHONY: clean
 
 clean:
-	rm -rf $(BIN) $(OBJ)
+	rm -rf $(BIN) $(OBJ) results
+	rm ./transplanner
+	rm ./speedtest
+	rm ./kmlout

@@ -66,8 +66,8 @@ $(OBJ_DIR)/XML_Writer.o: $(SRC_DIR)/XMLWriter.cpp $(INC_DIR)/DataSink.h $(INC_DI
 $(OBJ_DIR)/CSVBusSystemTest.o: $(TESTSRC_DIR)/CSVBusSystemTest.cpp ${INC_DIR}/CSVBusSystem.h $(INC_DIR)/BusSystem.h $(INC_DIR)/DSVReader.h ${INC_DIR}/DataSource.h ${INC_DIR}/StringDataSource.h
 	$(CXX) -o $(OBJ_DIR)/CSVBusSystemTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/CSVBusSystemTest.cpp
 
-$(OBJ_DIR)/OpenStreetMapTest.o: $(TESTSRC_DIR)/OpenStreetMapTest.cpp ${INC_DIR}/OpenStreetMap.h $(INC_DIR)/StreetMap.h $(INC_DIR)/XMLReader.h ${INC_DIR}/StringDataSource.h ${INC_DIR}/DataSource.h
-	$(CXX) -o $(OBJ_DIR)/OpenStreetMapTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/OpenStreetMapTest.cpp
+$(OBJ_DIR)/OpenStreetMapTest.o: $(TESTSRC_DIR)/OSMTest.cpp ${INC_DIR}/OpenStreetMap.h $(INC_DIR)/StreetMap.h $(INC_DIR)/XMLReader.h ${INC_DIR}/StringDataSource.h ${INC_DIR}/DataSource.h
+	$(CXX) -o $(OBJ_DIR)/OpenStreetMapTest.o $(CXX_FLAGS) -c $(TESTSRC_DIR)/OSMTest.cpp
 
 ${OBJ_DIR}/DSV_Test.o: ${TESTSRC_DIR}/DSVTest.cpp ${INC_DIR}/DSVWriter.h ${INC_DIR}/DSVReader.h ${INC_DIR}/DataSink.h ${INC_DIR}/DataSource.h ${INC_DIR}/StringDataSink.h ${INC_DIR}/StringDataSource.h
 	${CXX} -o ${OBJ_DIR}/DSV_Test.o ${CXX_FLAGS} -c ${TESTSRC_DIR}/DSVTest.cpp

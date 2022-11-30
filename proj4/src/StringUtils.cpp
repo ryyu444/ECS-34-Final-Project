@@ -241,7 +241,7 @@ std::string LStrip(const std::string &str) noexcept {
 
     while (i < len) {
         // First char that isn't whitespace
-        if ((str[i] != 32 && str[i] != 9 && str[i] != 10) && !stripped) {
+        if (!isspace(str[i]) && !stripped) {
             newStr += str[i];
             stripped = true;
         }
@@ -272,12 +272,12 @@ std::string RStrip(const std::string &str) noexcept{
 
     // Obtains index of last char that isn't white space
     for (int j = 0; j < (int) str.length(); j++) {
-        if (str[j] != 32 && str[j] != 9 && str[j] != 10) {
+        if (!isspace(str[j])) {
             last_char_idx = j;
         }
     }
 
-    if (last_char_idx == 0 && (str[last_char_idx] == 32 || str[last_char_idx] == 9 || str[last_char_idx] == 10)) {
+    if (last_char_idx == 0 && isspace(last_char_idx)) {
         return "";
     }
 
@@ -308,17 +308,17 @@ std::string Strip(const std::string &str) noexcept{
 
     // Finds first & last char indices(
     for (int i = 0; i < (int) str.length(); i++) {
-        if ((str[i] != 32 && str[i] != 9 && str[i] != 10) && !first) {
+        if (!isspace(str[i]) && !first) {
             first_char_idx = i;
             first = true;
         }
 
-        if (str[i] != 32 && str[i] != 9 && str[i] != 10) {
+        if (!isspace(str[i])) {
             last_char_idx = i;
         }
     }
 
-    if (first_char_idx == last_char_idx && (str[first_char_idx] == 32 || str[first_char_idx] == 9 || str[first_char_idx] == 10)) {
+    if (first_char_idx == last_char_idx && isspace(str[last_char_idx])) {
         return "";
     }
     
@@ -496,72 +496,75 @@ std::string Replace(const std::string &str, const std::string &old, const std::s
     return newStr;
 }
 
-std::vector< std::string > Split(const std::string &str, const std::string &splt) noexcept{
-    // Case: splt not found in str --> Return str
-    // Case: splt == "" --> Split on whitespace
-    // Case: splt found in str --> Break string w/ splt
-    // Case: Empty - "" --> ""
+std::vector<std::string> Split(const std::string &str, const std::string &splt) noexcept {
+        
+        std::vector<std::string> splitStrings = {};
 
-    std::vector<std::string> words;
-    std::string temp;
-    int j = 0;
-    int match = 0;
+        std::string tmpStr = str;
 
-    // Empty String --> Split by white space
-    if (splt == "") {
-        for (int i = 0; i < (int) str.length(); i++) {
-            if (str[i] == 32) {
-                words.push_back(temp);
-                temp.clear();
+        if(splt == "") {
+            tmpStr = tmpStr + " ";
+            tmpStr = LStrip(tmpStr);
+            std::string buf = "";
+                for(int i = 0; i < tmpStr.length() - 1; i++) {
+                    if(isspace(tmpStr[i]) && !isspace(tmpStr[i+1])) {
+                        splitStrings.push_back(buf);
+                        buf = "";
+                        continue;
+                    }
+                    else if(isspace(tmpStr[i]) && isspace(tmpStr[i+1])) {
+                        continue;
+                    }
+                    else {
+                        buf += tmpStr[i];
+                    }
+                }
+                splitStrings.push_back(buf);
             }
-            else {
-                temp += str[i];
+        else {
+            int pos;
+            // we do a little bit of flag tomfoolery 
+            int flag = true;
+            while(true) {
+                pos = tmpStr.find(splt);
+                if(pos != std::string::npos) {
+                    // add substring before match to vector
+                    if(pos > 0) {
+                        splitStrings.push_back(Slice(tmpStr, 0, pos));
+                        tmpStr = Slice(tmpStr, pos);
+                        flag = false;
+                        continue;
+                    }
+                    else if(pos == 0) {
+                        if(splt.length() - tmpStr.length() == 0 || 
+                            Slice(tmpStr, pos + splt.length()).find(splt) == 0) {
+                            flag = true;
+                        }
+                        if(flag) {
+                            splitStrings.push_back("");
+                            flag = false;
+                        }
+                    }
+                    // remove found split match
+                    tmpStr = Slice(tmpStr, splt.length() - pos); 
+                    //repeat
+                }
+                else {
+                    // add remainder of string to vector
+                    if(tmpStr != ""){
+                        splitStrings.push_back(tmpStr);
+                    }
+                    break;
+                }
+
             }
+
         }
-    }
-    
-    else {
-        std::vector<char> chars, swap;
-        for (int i = 0; i < (int) str.length(); i++) {
-            // Tries to find splt string
-            if (str[i] == splt[j]) {
-                j++;
-                match++;
-                chars.push_back(str[i]);
 
-                // Remove the splt string if its found & push word before it into vector
-                if (match == (int) splt.length()) {
-                    words.push_back(temp);
-                    temp.clear();
-                    chars.clear();
-                    j = 0;
-                    match = 0;
-                }
+        std::string lastString = splitStrings[splitStrings.size() - 1];
+        splitStrings[splitStrings.size() - 1] = Slice(lastString, 0, lastString.size());
 
-            }
-
-            else {
-                // Swaps chars to reverse order to take out as original string
-                while (!chars.empty()) {
-                    swap.push_back(chars.back());
-                    chars.pop_back();
-                }
-                // Takes out chars in order of original string
-                while(!swap.empty()) {
-                    temp += swap.back();
-                    swap.pop_back();
-                }
-                // Adds char to temp & resets splt counter
-                temp += str[i];
-                j = 0;
-                match = 0;
-            }
-        }
-    }
-    // Push last word in       
-    words.push_back(temp);
-    
-    return words;
+        return splitStrings;
 }
 
 std::string Join(const std::string &str, const std::vector< std::string > &vect) noexcept{

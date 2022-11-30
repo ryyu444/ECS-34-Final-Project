@@ -28,6 +28,11 @@ bool CDSVReader::ReadRow(std::vector<std::string> &row) {
     // Flushes out the vector before reading in a new row
     row.clear();
 
+    // returns false if empty src
+    if(End()) {
+        return false;
+    }
+
     // Buf: String to store chars grabbed from src
     // quoteOpen: Keeps track of whether a double quote has been seen or not
     std::string buf = "";

@@ -14,7 +14,28 @@ bool compareByID(std::shared_ptr<CStreetMap::SNode> &node1, std::shared_ptr<CStr
 
 struct CDijkstraTransportationPlanner::SImplementation {
 
-    public: 
+    public:
+
+        struct EdgeData {
+            TNodeID m_nextNodeID = CStreetMap::InvalidNodeID;
+            std::string m_streetName;
+            ETransportationMode m_transMode;
+            double m_time;
+            double m_speedLimit;
+            double m_distance;
+            std::string currRoute = "";
+
+            EdgeData(TNodeID nextNodeID, std::string streetName, 
+                double time, double speedLimit, double distance, ETransportationMode transMode) {
+                m_nextNodeID = nextNodeID;
+                m_streetName = streetName;
+                m_time = time;
+                m_speedLimit = speedLimit;
+                m_distance = distance;
+                m_transMode = transMode;
+            }
+        };
+
         std::shared_ptr<SConfiguration> m_config;
         std::shared_ptr<CStreetMap> m_streetMap;
         std::shared_ptr<CBusSystem> m_busSystem;
@@ -24,10 +45,13 @@ struct CDijkstraTransportationPlanner::SImplementation {
         std::unique_ptr<CDijkstraPathRouter> m_shortestPathGraph;
         std::unique_ptr<CDijkstraPathRouter> m_fastestBusWalkGraph;
         std::unique_ptr<CDijkstraPathRouter> m_fastestBikeGraph;
+        std::unordered_map<TNodeID, std::vector<EdgeData>> m_bikeEdgeData;
+        std::unordered_map<TNodeID, std::vector<EdgeData>> m_busWalkEdgeData;
         std::unordered_map<TNodeID, CPathRouter::TVertexID> m_vertexNodesMap;
         bool m_nodesPopulated;
 
         double m_walkSpeedLimit, m_bikeSpeedLimit, m_busStopTime, m_defaultSpeedLimit;
+
 
         
         SImplementation(std::shared_ptr<SConfiguration> config) {
@@ -153,28 +177,6 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         return CPathRouter::NoPathExists;
     }
 
-    struct EdgeData {
-        TNodeID m_nextNodeID = CStreetMap::InvalidNodeID;
-        std::string m_streetName;
-        ETransportationMode m_transMode;
-        double m_time;
-        double m_speedLimit;
-        double m_distance;
-
-        EdgeData(TNodeID nextNodeID, std::string streetName, 
-            double time, double speedLimit, double distance, ETransportationMode transMode) {
-            m_nextNodeID = nextNodeID;
-            m_streetName = streetName;
-            m_time = time;
-            m_speedLimit = speedLimit;
-            m_distance = distance;
-            m_transMode = transMode;
-        }
-    };
-
-    std::unordered_map<TNodeID, std::vector<EdgeData>> bikeEdgeData;
-    std::unordered_map<TNodeID, std::vector<EdgeData>> busWalkEdgeData;
-
     // Adds all nodes as vertices in the graph
     for (int j = 0; j < NodeCount(); j++) {
         CPathRouter::TVertexID tmp_vert_id;
@@ -233,7 +235,7 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                 DImplementation -> m_fastestBikeGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
                                                                  DImplementation -> m_vertexNodesMap[next_nodeID], 
                                                                  bikingTime, !isOneWay);
-                bikeEdgeData[curr_nodeID].push_back(EdgeData(next_nodeID, streetName, bikingTime, 
+                DImplementation -> m_bikeEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, bikingTime, 
                                                              DImplementation -> m_bikeSpeedLimit, dist, 
                                                              ETransportationMode::Bike));
                 // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << bikeEdgeData[curr_nodeID][0].m_nextNodeID << ", " << bikeEdgeData[curr_nodeID][0].m_time << ")\n";
@@ -243,7 +245,7 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
             DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
                                                                 DImplementation -> m_vertexNodesMap[next_nodeID], 
                                                                 walkingTime, true);
-            busWalkEdgeData[curr_nodeID].push_back(EdgeData(next_nodeID, streetName, walkingTime, speedLimit, dist, 
+            DImplementation -> m_busWalkEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, walkingTime, speedLimit, dist, 
                                                             ETransportationMode::Walk));
             // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << busWalkEdgeData[curr_nodeID][0].m_nextNodeID 
             //     << ", " << busWalkEdgeData[curr_nodeID][0].m_distance
@@ -281,18 +283,18 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                 TNodeID currNode = shortestPathBetweenStops[g];
                 TNodeID nextNode = shortestPathBetweenStops[g + 1];
 
-                for (int j = 0; j < busWalkEdgeData[currNode].size(); j++) {
-                    if(busWalkEdgeData[currNode][j].m_nextNodeID == nextNode) {
-                        double speed = busWalkEdgeData[currNode][j].m_speedLimit;
-                        double dist = busWalkEdgeData[currNode][j].m_distance;
+                for (int j = 0; j < DImplementation -> m_busWalkEdgeData[currNode].size(); j++) {
+                    if(DImplementation -> m_busWalkEdgeData[currNode][j].m_nextNodeID == nextNode) {
+                        double speed = DImplementation -> m_busWalkEdgeData[currNode][j].m_speedLimit;
+                        double dist = DImplementation -> m_busWalkEdgeData[currNode][j].m_distance;
                         double time = dist / speed;
                         // only add stop time to first edge
                         if (g == 0) {
                             time += (DImplementation -> m_busStopTime / 3600);
                         }
-                        busWalkEdgeData[currNode][j].m_time = time;
+                        DImplementation -> m_busWalkEdgeData[currNode][j].m_time = time;
                         // std::cout << "Curr Node " << currNode << " - " << busWalkEdgeData[currNode][j].m_nextNodeID << ": (" << busWalkEdgeData[currNode][j].m_time << ")" << std::endl;
-                        busWalkEdgeData[currNode][j].m_transMode = ETransportationMode::Bus;
+                        DImplementation -> m_busWalkEdgeData[currNode][j].m_transMode = ETransportationMode::Bus;
 
                         DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[currNode], 
                                                                             DImplementation -> m_vertexNodesMap[nextNode], 
@@ -333,7 +335,7 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         return bikingTime;
     }
     else {
-
+        
         std::vector<TTripStep> walkBussingFastestPath;
         walkBussingFastestPath.push_back(TTripStep(ETransportationMode::Walk, std::any_cast<TNodeID>(DImplementation -> m_fastestBusWalkGraph 
                                                 -> GetVertexTag(walkBussingPath[0]))));
@@ -342,9 +344,9 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                                                         -> GetVertexTag(walkBussingPath[p - 1]));
             TNodeID nextNodeID = std::any_cast<TNodeID>(DImplementation -> m_fastestBusWalkGraph 
                                                         -> GetVertexTag(walkBussingPath[p]));
-            for (int v = 0; v < busWalkEdgeData[currNodeID].size(); v++) {
-                if (busWalkEdgeData[currNodeID][v].m_nextNodeID == nextNodeID) {
-                    ETransportationMode mode = busWalkEdgeData[currNodeID][v].m_transMode;
+            for (int v = 0; v < DImplementation -> m_busWalkEdgeData[currNodeID].size(); v++) {
+                if (DImplementation -> m_busWalkEdgeData[currNodeID][v].m_nextNodeID == nextNodeID) {
+                    ETransportationMode mode = DImplementation -> m_busWalkEdgeData[currNodeID][v].m_transMode;
                     walkBussingFastestPath.push_back(TTripStep(mode, nextNodeID));
                 }
             }

@@ -160,7 +160,6 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         double m_time;
         double m_speedLimit;
         double m_distance;
-        bool m_checked = false;
 
         EdgeData(TNodeID nextNodeID, std::string streetName, 
             double time, double speedLimit, double distance, ETransportationMode transMode) {
@@ -343,7 +342,6 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                                                         -> GetVertexTag(walkBussingPath[p - 1]));
             TNodeID nextNodeID = std::any_cast<TNodeID>(DImplementation -> m_fastestBusWalkGraph 
                                                         -> GetVertexTag(walkBussingPath[p]));
-            std::cout << "Cur Node ID: " << currNodeID << std::endl;
             for (int v = 0; v < busWalkEdgeData[currNodeID].size(); v++) {
                 if (busWalkEdgeData[currNodeID][v].m_nextNodeID == nextNodeID) {
                     ETransportationMode mode = busWalkEdgeData[currNodeID][v].m_transMode;

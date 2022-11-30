@@ -178,7 +178,7 @@ struct COpenStreetMap::SImplementation {
             while (m_src -> ReadEntity(data, true)) {
                 // Node --> Store node_id, node_loc & set node = true to indicate node found
                 if (data.DNameData == "node" && data.DType == SXMLEntity::EType::StartElement) {
-                    node_id = (TNodeID) std::stoi(data.DAttributes.at(0).second);
+                    node_id = (TNodeID) std::stol(data.DAttributes.at(0).second);
                     node_loc = (TLocation) {std::stod(data.DAttributes.at(1).second), 
                                             std::stod(data.DAttributes.at(2).second)};
                     node = true;
@@ -186,13 +186,13 @@ struct COpenStreetMap::SImplementation {
 
                 // Way --> Store way_id & set way = true to indicate way found
                 else if (data.DNameData == "way" && data.DType == SXMLEntity::EType::StartElement) {
-                    way_id = (TWayID) std::stoi(data.DAttributes.at(0).second);
+                    way_id = (TWayID) std::stol(data.DAttributes.at(0).second);
                     way = true;
                 }
                 
                 // Nodes in way --> Use nodes_map to find corresponding S_Node instance to store for that way
                 else if (data.DNameData == "nd" && data.DType == SXMLEntity::EType::StartElement) {
-                    way_nodes.push_back(nodes_map.at(std::stoi(data.DAttributes.at(0).second)));
+                    way_nodes.push_back(nodes_map.at(std::stol(data.DAttributes.at(0).second)));
                 }
 
                 // Tags for nodes: Store the SXMLEntity for node

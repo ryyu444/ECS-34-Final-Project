@@ -84,11 +84,11 @@ struct CCSVBusSystem::SImplementation {
                 std::vector<std::string> s_row;
                 m_stopsrc -> ReadRow(s_row);
 
-                auto tmp = std::make_shared<S_Stop>(S_Stop((TStopID) std::stoi(s_row.at(0)), 
-                            (CStreetMap::TNodeID) std::stoi(s_row.at(1))));
+                auto tmp = std::make_shared<S_Stop>(S_Stop((TStopID) std::stol(s_row.at(0)), 
+                            (CStreetMap::TNodeID) std::stol(s_row.at(1))));
 
                 // Creates new Stop & pushes into stops map and stops vector
-                t_stops_map[(TStopID) std::stoi(s_row.at(0))] = tmp;
+                t_stops_map[(TStopID) std::stol(s_row.at(0))] = tmp;
                 t_stops.push_back(tmp);
             }
             

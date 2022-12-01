@@ -157,7 +157,7 @@ bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
         }
 
     }
-    else if (entityBuf.size() == 0 || std::string(entityBuf.begin(), entityBuf.end()) == "<></>") {
+    else if (entityBuf.size() == 0 || std::string(entityBuf.begin(), entityBuf.begin() + 5) == "<></>") {
         return false;
     }
 

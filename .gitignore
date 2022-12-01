@@ -37,6 +37,6 @@ proj4/obj
 proj3/.vscode/settings.json
 settings.json
 
-proj4/speedtest
-proj4/kmlout
-proj4/transplanner
+# proj4/speedtest
+# proj4/kmlout
+# proj4/transplanner

@@ -11,6 +11,8 @@ struct CXMLReader::SImplementation {
 
         static std::vector<SXMLEntity> s_entities;
 
+        // bool m_isEmp
+
         void m_startElement(const char* name, const char* atts[]) {
             SXMLEntity tmpEntity;
             make_charData();
@@ -70,6 +72,21 @@ std::string CXMLReader::SImplementation::c_data = "";
 
 CXMLReader::CXMLReader(std::shared_ptr<CDataSource> src) {
     DImplementation = std::make_unique<SImplementation>(SImplementation(src));
+
+    // Sets entity to be passed into the m_parser
+    std::vector<char> entityBuf, tmpCharBuf;
+
+    while (!DImplementation-> m_src -> End()) {
+        // Gets tags by char
+        if(DImplementation -> m_src -> Read(tmpCharBuf, 4096)) {
+            // entityBuf += tmpCharBuf;
+            entityBuf.insert(entityBuf.end(), tmpCharBuf.begin(), tmpCharBuf.end());
+        }
+        tmpCharBuf.clear();
+    }
+
+    // Throw into expat m_parser to handle the parsing
+    XML_Parse(DImplementation -> m_parser, entityBuf.data(), entityBuf.size(), !DImplementation-> m_src -> End());
 }
 
 CXMLReader::~CXMLReader() {
@@ -109,34 +126,10 @@ bool CXMLReader::End() const {
 // skipcdata: Skips only CharData if true
 bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
 
-    // Sets entity to be passed into the m_parser
-    std::vector<char> entityBuf, tmpCharBuf;
-    char prevChar, peekChar;
-    bool openTag = false, closeTag = false, complete = false, end = false;
-
-    while (!DImplementation-> m_src -> End()) {
-        // Gets tags by char
-        if(DImplementation -> m_src -> Read(tmpCharBuf, 4096)) {
-            // entityBuf += tmpCharBuf;
-            entityBuf.insert(entityBuf.end(), tmpCharBuf.begin(), tmpCharBuf.end());
-        }
-        tmpCharBuf.clear();
+    if (SImplementation::s_entities.size() == 0) {
+        return false;
     }
-
-    // std::cout << "entityBuf: " << entityBuf.c_str() << "\n";
-    // std::cout << "entityBuf len: " << entityBuf.length() << "\n";
-    // std::cout << "End?: " << !DImplementation-> m_src -> End() << "\n";
-
-    // Throw into expat m_parser to handle the parsing
-    bool parsed = XML_Parse(DImplementation -> m_parser, entityBuf.data(), entityBuf.size(), !DImplementation-> m_src -> End());
-    // std::cout << "Parsed?: " << parsed << "\n";
-    
-    if(SImplementation::s_entities.size() > 0) {
-        
-        // std::cout << "s_entites (size " << SImplementation::s_entities.size() << "):\n";
-        for(int i = 0; i < SImplementation::s_entities.size(); i++) {
-            // std::cout << SImplementation::s_entities[i].DNameData << "\n";
-        }
+    else if(SImplementation::s_entities.size() > 0) {
 
         // if skipcdata == true -> remove charData from entities vector
         if(skipcdata) {
@@ -145,20 +138,11 @@ bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
                     SImplementation::s_entities.erase(SImplementation::s_entities.begin()+i);
                 }
             }
-            skipcdata = false;
         }
 
         entity = SImplementation::s_entities[0];
         SImplementation::s_entities.erase(SImplementation::s_entities.begin());
 
-        // std::cout << "after erasing s_entities:\n";
-        for(int i = 0; i < SImplementation::s_entities.size(); i++) {
-            // std::cout << SImplementation::s_entities[i].DNameData << "\n";
-        }
-
-    }
-    else if (entityBuf.size() == 0 || std::string(entityBuf.begin(), entityBuf.begin() + 5) == "<></>") {
-        return false;
     }
 
     return true;

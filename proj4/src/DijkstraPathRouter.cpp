@@ -3,6 +3,8 @@
 #include <deque>
 #include <algorithm>
 
+// bool minHeapCompare()
+
 struct CDijkstraPathRouter::SImplementation {
     public:
 

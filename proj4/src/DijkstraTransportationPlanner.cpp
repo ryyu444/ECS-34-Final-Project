@@ -48,7 +48,8 @@ struct CDijkstraTransportationPlanner::SImplementation {
         std::unordered_map<TNodeID, std::vector<EdgeData>> m_bikeEdgeData;
         std::unordered_map<TNodeID, std::vector<EdgeData>> m_busWalkEdgeData;
         std::unordered_map<TNodeID, CPathRouter::TVertexID> m_vertexNodesMap;
-        bool m_nodesPopulated;
+        bool m_shortestNodesPopulated;
+        bool m_fastestNodesPopulated;
 
         double m_walkSpeedLimit, m_bikeSpeedLimit, m_busStopTime, m_defaultSpeedLimit;
 
@@ -62,7 +63,8 @@ struct CDijkstraTransportationPlanner::SImplementation {
             m_shortestPathGraph = std::make_unique<CDijkstraPathRouter>();
             m_fastestBusWalkGraph = std::make_unique<CDijkstraPathRouter>();
             m_fastestBikeGraph = std::make_unique<CDijkstraPathRouter>();
-            m_nodesPopulated = false;
+            m_shortestNodesPopulated = false;
+            m_fastestNodesPopulated = false;
 
             m_walkSpeedLimit = m_config -> WalkSpeed();
             m_bikeSpeedLimit = m_config  -> BikeSpeed();
@@ -103,8 +105,8 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
     }
 
     // Check if the graph is created already or not
-    if(!DImplementation -> m_nodesPopulated) {
-        // Adds all nodes as vertices in the graph
+    if(!DImplementation -> m_shortestNodesPopulated) {
+        // Adds all nodes as vertices in the graph + Map TNodeIDs to TVertexIDs
         for (int j = 0; j < NodeCount(); j++) {
             CPathRouter::TVertexID tmp_vert_id;
             
@@ -142,8 +144,8 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
                 
                 double dist = SGeographicUtils::HaversineDistanceInMiles(curr_node -> Location(), next_node -> Location());
 
-                // std::cout << "currNode id: " << curr_node -> ID() << std::endl; 
-                // std::cout << "nextNode id: " << next_node -> ID() << std::endl; 
+                // std::cout << "currVert id: " << DImplementation -> m_vertexNodesMap[curr_nodeID] << std::endl; 
+                // std::cout << "nextVert id: " << DImplementation -> m_vertexNodesMap[next_nodeID] << std::endl; 
                 // std::cout << "dist: " << dist << std::endl;
                 
                 DImplementation -> m_shortestPathGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
@@ -152,7 +154,7 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
             }
         }
 
-        DImplementation -> m_nodesPopulated = true;
+        DImplementation -> m_shortestNodesPopulated = true;
     }
 
     // Finds shortest path
@@ -176,135 +178,122 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
     if (!NodeCount()) {
         return CPathRouter::NoPathExists;
     }
-
-    // Adds all nodes as vertices in the graph
-    for (int j = 0; j < NodeCount(); j++) {
-        CPathRouter::TVertexID tmp_vert_id;
-        
-        TNodeID curr_node_ID = SortedNodeByIndex(j) -> ID();
-        
-        tmp_vert_id = DImplementation -> m_fastestBusWalkGraph -> AddVertex(curr_node_ID);
-        DImplementation -> m_fastestBikeGraph -> AddVertex(curr_node_ID);
-    }
-
-    // Iterate through ways & add edges connecting vertices
-    /* 
-       1) Check tag for oneway, maxspeed, bicycle, & name (optional)
-       2) Have variables that track the above items: Set to default values if not found
-       3) Calculate the min time for biking & bus/walking from cur node to next
-       4) Add the edge with the min time
-    */
-    // std::cout << "Speed limit: " << speedLimit << std::endl;
-
-    // Ways - Used for biking & walking
-    for (int k = 0; k < DImplementation -> m_streetMap -> WayCount(); k++) {
-        
-        std::shared_ptr<CStreetMap::SWay> curr_way = DImplementation -> m_streetMap -> WayByIndex(k);
-        
-        // check if one way or not 
-        bool isOneWay = curr_way -> GetAttribute("oneway") == "yes" ? true : false;
-        bool bikingAllowed = curr_way -> GetAttribute("bicycle") == "no" ? false : true;
-        std::string streetName = curr_way -> GetAttribute("name");
-        std::string rawSpeedLimit = curr_way -> GetAttribute("maxspeed");
-        // std::cout << "Raw Speed: " << rawSpeedLimit << std::endl;
-        double speedLimit = rawSpeedLimit != "" ? 
-            std::stod(StringUtils::Split(rawSpeedLimit)[0]) : 
-            DImplementation -> m_defaultSpeedLimit;
-        // std::cout << "Speed Limit Double: " << speedLimit << std::endl;
-        
-        
-
-        // Iterates through ways & builds edges between nodes for biking and walking
-        for (int l = 0; l < curr_way -> NodeCount() - 1; l++) {
-            TNodeID curr_nodeID = curr_way -> GetNodeID(l);
-            TNodeID next_nodeID = curr_way -> GetNodeID(l + 1);
-
-            std::shared_ptr<CStreetMap::SNode> curr_node = DImplementation -> m_streetMap -> NodeByID(curr_nodeID);
-            std::shared_ptr<CStreetMap::SNode> next_node = DImplementation -> m_streetMap -> NodeByID(next_nodeID);
+    // std::cout << "Vertex Count: " << DImplementation -> m_fastestBusWalkGraph -> VertexCount() << std::endl;
+    if (!DImplementation -> m_fastestNodesPopulated) {
+        // Adds all nodes as vertices in the graph
+        for (int j = 0; j < NodeCount(); j++) {
+            CPathRouter::TVertexID tmp_vert_id;
             
-            // time = distance / velocity (speed)
-            double dist = SGeographicUtils::HaversineDistanceInMiles(curr_node -> Location(), next_node -> Location());
-            double bikingTime = dist / DImplementation -> m_bikeSpeedLimit;
-            double walkingTime = dist / DImplementation -> m_walkSpeedLimit;
+            TNodeID curr_node_ID = SortedNodeByIndex(j) -> ID();
             
-            // std::cout << "currNode id: " << curr_node -> ID() << std::endl; 
-            // std::cout << "nextNode id: " << next_node -> ID() << std::endl; 
-            // std::cout << "distance in miles: " << dist << std::endl;
-            
-            if (bikingAllowed) {
-                DImplementation -> m_fastestBikeGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
-                                                                 DImplementation -> m_vertexNodesMap[next_nodeID], 
-                                                                 bikingTime, !isOneWay);
-                DImplementation -> m_bikeEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, bikingTime, 
-                                                             DImplementation -> m_bikeSpeedLimit, dist, 
-                                                             ETransportationMode::Bike));
-                // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << bikeEdgeData[curr_nodeID][0].m_nextNodeID << ", " << bikeEdgeData[curr_nodeID][0].m_time << ")\n";
+            tmp_vert_id = DImplementation -> m_fastestBusWalkGraph -> AddVertex(curr_node_ID);
+            DImplementation -> m_fastestBikeGraph -> AddVertex(curr_node_ID);
+
+            // IF shortest path has not populated the vertexNodeMap, do it here
+            if (!DImplementation -> m_shortestNodesPopulated) {
+                DImplementation -> m_vertexNodesMap[curr_node_ID] = tmp_vert_id;
             }
-
-            // std::cout << "Walking Time: " << walkingTime << std::endl;
-            DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
-                                                                DImplementation -> m_vertexNodesMap[next_nodeID], 
-                                                                walkingTime, true);
-            DImplementation -> m_busWalkEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, walkingTime, speedLimit, dist, 
-                                                            ETransportationMode::Walk));
-            // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << busWalkEdgeData[curr_nodeID][0].m_nextNodeID 
-            //     << ", " << busWalkEdgeData[curr_nodeID][0].m_distance
-            //     << ")\n";
-            // std::cout << speed
         }
-    }
+        // Iterate through ways & add edges connecting vertices
+        /* 
+        1) Check tag for oneway, maxspeed, bicycle, & name (optional)
+        2) Have variables that track the above items: Set to default values if not found
+        3) Calculate the min time for biking & bus/walking from cur node to next
+        4) Add the edge with the min time
+        */
+        // std::cout << "Speed limit: " << speedLimit << std::endl;
 
-
-
-    
-    for (int n = 0; n < DImplementation -> m_busSystem -> RouteCount(); n++) {
-        std::shared_ptr<CBusSystem::SRoute> curr_route = DImplementation -> m_busSystem -> RouteByIndex(n);
-
-        // Duplicate issue
-        for (int q = 0; q < curr_route -> StopCount() - 1; q++) {
-            TNodeID currStopNodeID = DImplementation -> m_busSystem -> StopByID(curr_route -> GetStopID(q)) -> NodeID();
-            TNodeID nextStopNodeID = DImplementation -> m_busSystem -> StopByID(curr_route -> GetStopID(q + 1)) -> NodeID();
-
-            // Check if currNodeID in busWalkEdgeData & check if nextNodeID == busWalkEdgeData[currNodeID].m_nextNodeID
-            /* stops can be more than 1 node apart, whilst walking has to go from node to node
-                (1) - > (3) is possible for bus, but while walking you have to go (1) -> (2) -> (3)
-
-                Plan: 
-                1) Find shortest path between consecutive stops
-                2) Iterate through nodes in the found shortest path and calculate the time for buses
-                3) replace walk data (time and transMode) in EdgeData vector with bus data
-            */
+        // Ways - Used for biking & walking
+        for (int k = 0; k < DImplementation -> m_streetMap -> WayCount(); k++) {
             
-            std::vector<TNodeID> shortestPathBetweenStops;
-            FindShortestPath(currStopNodeID, nextStopNodeID, shortestPathBetweenStops);
+            std::shared_ptr<CStreetMap::SWay> curr_way = DImplementation -> m_streetMap -> WayByIndex(k);
+            
+            // check if one way or not 
+            bool isOneWay = curr_way -> GetAttribute("oneway") == "yes" ? true : false;
+            bool bikingAllowed = curr_way -> GetAttribute("bicycle") == "no" ? false : true;
+            std::string streetName = curr_way -> GetAttribute("name");
+            std::string rawSpeedLimit = curr_way -> GetAttribute("maxspeed");
+            // std::cout << "Raw Speed: " << rawSpeedLimit << std::endl;
+            double speedLimit = rawSpeedLimit != "" ? 
+                std::stod(StringUtils::Split(rawSpeedLimit)[0]) : 
+                DImplementation -> m_defaultSpeedLimit;
+            // std::cout << "Speed Limit Double: " << speedLimit << std::endl;
+            
+            
 
-            // g++ cameo 😳
-            for (int g = 0; g < shortestPathBetweenStops.size() - 1; g++) {
-                TNodeID currNode = shortestPathBetweenStops[g];
-                TNodeID nextNode = shortestPathBetweenStops[g + 1];
+            // Iterates through ways & builds edges between nodes for biking and walking
+            // Check if there are routes between the nodes
+            for (int l = 0; l < curr_way -> NodeCount() - 1; l++) {
+                TNodeID curr_nodeID = curr_way -> GetNodeID(l);
+                TNodeID next_nodeID = curr_way -> GetNodeID(l + 1);
 
-                for (int j = 0; j < DImplementation -> m_busWalkEdgeData[currNode].size(); j++) {
-                    if(DImplementation -> m_busWalkEdgeData[currNode][j].m_nextNodeID == nextNode) {
-                        double speed = DImplementation -> m_busWalkEdgeData[currNode][j].m_speedLimit;
-                        double dist = DImplementation -> m_busWalkEdgeData[currNode][j].m_distance;
-                        double time = dist / speed;
-                        // only add stop time to first edge
-                        if (g == 0) {
-                            time += (DImplementation -> m_busStopTime / 3600);
-                        }
-                        DImplementation -> m_busWalkEdgeData[currNode][j].m_time = time;
-                        // std::cout << "Curr Node " << currNode << " - " << busWalkEdgeData[currNode][j].m_nextNodeID << ": (" << busWalkEdgeData[currNode][j].m_time << ")" << std::endl;
-                        DImplementation -> m_busWalkEdgeData[currNode][j].m_transMode = ETransportationMode::Bus;
+                // std::cout << "Cur Node ID: " << curr_nodeID << std::endl;
+                // std::cout << "Next Node ID: " << next_nodeID << std::endl;
 
-                        DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[currNode], 
-                                                                            DImplementation -> m_vertexNodesMap[nextNode], 
-                                                                            time, false);
-                    }
+                std::shared_ptr<CStreetMap::SNode> curr_node = DImplementation -> m_streetMap -> NodeByID(curr_nodeID);
+                std::shared_ptr<CStreetMap::SNode> next_node = DImplementation -> m_streetMap -> NodeByID(next_nodeID);
+
+                std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> busRoutes;
+                DImplementation -> m_busSystemIndexer -> RoutesByNodeIDs(curr_nodeID, next_nodeID, busRoutes);
+                // for (auto i : busRoutes) {
+                //     std::cout << "Route: " << i -> Name() << std::endl;
+                // }
+                // std::cout << "End" << std::endl;
+                
+                // time = distance / velocity (speed)
+                double dist = SGeographicUtils::HaversineDistanceInMiles(curr_node -> Location(), next_node -> Location());
+                double bikingTime = dist / DImplementation -> m_bikeSpeedLimit;
+                double walkingTime = dist / DImplementation -> m_walkSpeedLimit;
+                double busTime = dist / speedLimit + (DImplementation -> m_busStopTime / 3600);
+                // std::cout << "Bus Time: " << busTime << std::endl;
+                
+                // std::cout << "currNode id: " << curr_node -> ID() << std::endl; 
+                // std::cout << "nextNode id: " << next_node -> ID() << std::endl; 
+                // std::cout << "distance in miles: " << dist << std::endl;
+                
+                if (bikingAllowed) {
+                    DImplementation -> m_fastestBikeGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
+                                                                    DImplementation -> m_vertexNodesMap[next_nodeID], 
+                                                                    bikingTime, !isOneWay);
+                    DImplementation -> m_bikeEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, bikingTime, 
+                                                                DImplementation -> m_bikeSpeedLimit, dist, 
+                                                                ETransportationMode::Bike));
                 }
 
+                // std::cout << "Walking Time: " << walkingTime << std::endl;
+                
+                // Bus Route exists so create edge between cur & next w/ bus time
+                if (busRoutes.size()) {
+                    // std::cout << "Adj Edges before: " << DImplementation -> m_busWalkEdgeData[curr_nodeID].size() << std::endl;
+                    // std::cout << "currVert id: " << DImplementation -> m_vertexNodesMap[curr_nodeID] << std::endl; 
+                    // std::cout << "nextVert id: " << DImplementation -> m_vertexNodesMap[next_nodeID] << std::endl;
+                    
+                    DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
+                                                                        DImplementation -> m_vertexNodesMap[next_nodeID], 
+                                                                        busTime, false);
+                    // std::cout << "Added!" << std::endl;
+                    DImplementation -> m_busWalkEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, busTime, speedLimit, dist, 
+                                                                    ETransportationMode::Bus));
+                    // std::cout << "Adj Edges after: " << DImplementation -> m_busWalkEdgeData[curr_nodeID].size() << std::endl;
+                    // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << DImplementation -> m_busWalkEdgeData[curr_nodeID][0].m_nextNodeID << ", " << DImplementation -> m_busWalkEdgeData[curr_nodeID][0].m_time << ")\n";
+
+                }
+                else {
+                    // std::cout << "Not added" << std::endl;
+                    DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
+                                                                        DImplementation -> m_vertexNodesMap[next_nodeID], 
+                                                                        walkingTime, true);
+                    DImplementation -> m_busWalkEdgeData[curr_nodeID].push_back(SImplementation::EdgeData(next_nodeID, streetName, walkingTime, speedLimit, dist, 
+                                                                    ETransportationMode::Walk));
+                }
+                // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << busWalkEdgeData[curr_nodeID][0].m_nextNodeID 
+                //     << ", " << busWalkEdgeData[curr_nodeID][0].m_distance
+                //     << ")\n";
+                // std::cout << speed
             }
         }
 
+        DImplementation -> m_fastestNodesPopulated = true;
     }
 
     // Finds shortest path for biking
@@ -314,12 +303,19 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                                                    bikingPath);
 
     // std::cout << "Biking Time: " << bikingTime << std::endl;
-
+    // std::cout << "Biking Path Size: " << bikingPath.size() << std::endl;
+    // for (auto i : bikingPath) {
+    //     std::cout << "Node ID: " << std::any_cast<TNodeID>(DImplementation -> m_fastestBusWalkGraph 
+    //                                                     -> GetVertexTag(i)) << std::endl;
+    // }
     // Finds shortest path for walking/bussing
     std::vector<CPathRouter::TVertexID> walkBussingPath;
     double walkBussingTime = DImplementation -> m_fastestBusWalkGraph -> FindShortestPath(DImplementation -> m_vertexNodesMap[src], 
                                                    DImplementation -> m_vertexNodesMap[dest], 
                                                    walkBussingPath);
+
+    // std::cout << "Bus-Walk Time: " << walkBussingTime << std::endl;
+    // std::cout << "Walk-Bus Path Size: " << walkBussingPath.size() << std::endl;
 
 
     if (walkBussingTime > bikingTime) {

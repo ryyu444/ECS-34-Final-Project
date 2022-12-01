@@ -144,8 +144,8 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
                 
                 double dist = SGeographicUtils::HaversineDistanceInMiles(curr_node -> Location(), next_node -> Location());
 
-                // std::cout << "currNode id: " << curr_node -> ID() << std::endl; 
-                // std::cout << "nextNode id: " << next_node -> ID() << std::endl; 
+                // std::cout << "currVert id: " << DImplementation -> m_vertexNodesMap[curr_nodeID] << std::endl; 
+                // std::cout << "nextVert id: " << DImplementation -> m_vertexNodesMap[next_nodeID] << std::endl; 
                 // std::cout << "dist: " << dist << std::endl;
                 
                 DImplementation -> m_shortestPathGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
@@ -188,6 +188,11 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
             
             tmp_vert_id = DImplementation -> m_fastestBusWalkGraph -> AddVertex(curr_node_ID);
             DImplementation -> m_fastestBikeGraph -> AddVertex(curr_node_ID);
+
+            // IF shortest path has not populated the vertexNodeMap, do it here
+            if (!DImplementation -> m_shortestNodesPopulated) {
+                DImplementation -> m_vertexNodesMap[curr_node_ID] = tmp_vert_id;
+            }
         }
         // Iterate through ways & add edges connecting vertices
         /* 
@@ -260,6 +265,9 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                 // Bus Route exists so create edge between cur & next w/ bus time
                 if (busRoutes.size()) {
                     // std::cout << "Adj Edges before: " << DImplementation -> m_busWalkEdgeData[curr_nodeID].size() << std::endl;
+                    // std::cout << "currVert id: " << DImplementation -> m_vertexNodesMap[curr_nodeID] << std::endl; 
+                    // std::cout << "nextVert id: " << DImplementation -> m_vertexNodesMap[next_nodeID] << std::endl;
+                    
                     DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
                                                                         DImplementation -> m_vertexNodesMap[next_nodeID], 
                                                                         busTime, false);
@@ -288,76 +296,14 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         DImplementation -> m_fastestNodesPopulated = true;
     }
 
-
-
-    // Iterate through routes
-    // for (int n = 0; n < DImplementation -> m_busSystem -> RouteCount(); n++) {
-    //     std::shared_ptr<CBusSystem::SRoute> curr_route = DImplementation -> m_busSystem -> RouteByIndex(n);
-
-    //     // Iterate through stops
-    //     for (int q = 0; q < curr_route -> StopCount() - 1; q++) {
-    //         TNodeID currStopNodeID = DImplementation -> m_busSystem -> StopByID(curr_route -> GetStopID(q)) -> NodeID();
-    //         TNodeID nextStopNodeID = DImplementation -> m_busSystem -> StopByID(curr_route -> GetStopID(q + 1)) -> NodeID();
-
-    //         // Check if currNodeID in busWalkEdgeData & check if nextNodeID == busWalkEdgeData[currNodeID].m_nextNodeID
-    //         /* stops can be more than 1 node apart, whilst walking has to go from node to node
-    //             (1) - > (3) is possible for bus, but while walking you have to go (1) -> (2) -> (3)
-
-    //             Plan: 
-    //             1) Find shortest path between consecutive stops
-    //             2) Iterate through nodes in the found shortest path and calculate the time for buses
-    //             3) replace walk data (time and transMode) in EdgeData vector with bus data
-    //         */
-            
-    //         // Finds shortest path between stops
-    //         // 1) Calls above to find shortest path in m_shortestPathGraph
-    //         // 2) m_shortestPathGraph calls DijkstraPathRouter's FindShortestPath
-    //         std::vector<TNodeID> shortestPathBetweenStops;
-    //         FindShortestPath(currStopNodeID, nextStopNodeID, shortestPathBetweenStops);
-
-    //         // for (auto i: shortestPathBetweenStops) {
-    //         //     std::cout << "TNodeID: " << i << std::endl;
-    //         // }
-    //         // std::cout << "End" << std::endl;
-
-    //         // Iterates through shortest path between stops
-    //         for (int g = 0; g < shortestPathBetweenStops.size() - 1; g++) {
-    //             TNodeID currNode = shortestPathBetweenStops[g];
-    //             TNodeID nextNode = shortestPathBetweenStops[g + 1];
-
-    //             // Goes through edge data to look for nextNode's ID & update the time if found
-    //             for (int j = 0; j < DImplementation -> m_busWalkEdgeData[currNode].size(); j++) {
-    //                 if(DImplementation -> m_busWalkEdgeData[currNode][j].m_nextNodeID == nextNode) {
-    //                     double speed = DImplementation -> m_busWalkEdgeData[currNode][j].m_speedLimit;
-    //                     double dist = DImplementation -> m_busWalkEdgeData[currNode][j].m_distance;
-    //                     double time = dist / speed;
-    //                     // only add stop time to first edge
-    //                     if (g == 0) {
-    //                         time += (DImplementation -> m_busStopTime / 3600);
-    //                     }
-    //                     DImplementation -> m_busWalkEdgeData[currNode][j].m_time = time;
-    //                     // std::cout << "Curr Node " << currNode << " - " << busWalkEdgeData[currNode][j].m_nextNodeID << ": (" << busWalkEdgeData[currNode][j].m_time << ")" << std::endl;
-    //                     DImplementation -> m_busWalkEdgeData[currNode][j].m_transMode = ETransportationMode::Bus;
-
-    //                     DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[currNode], 
-    //                                                                         DImplementation -> m_vertexNodesMap[nextNode], 
-    //                                                                         time, false);
-    //                 }
-    //             }
-
-    //         }
-    //     }
-
-    // }
-
     // Finds shortest path for biking
     std::vector<CPathRouter::TVertexID> bikingPath;
     double bikingTime = DImplementation -> m_fastestBikeGraph -> FindShortestPath(DImplementation -> m_vertexNodesMap[src], 
                                                    DImplementation -> m_vertexNodesMap[dest], 
                                                    bikingPath);
 
-    std::cout << "Biking Time: " << bikingTime << std::endl;
-    std::cout << "Biking Path Size: " << bikingPath.size() << std::endl;
+    // std::cout << "Biking Time: " << bikingTime << std::endl;
+    // std::cout << "Biking Path Size: " << bikingPath.size() << std::endl;
     // for (auto i : bikingPath) {
     //     std::cout << "Node ID: " << std::any_cast<TNodeID>(DImplementation -> m_fastestBusWalkGraph 
     //                                                     -> GetVertexTag(i)) << std::endl;
@@ -368,8 +314,8 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                                                    DImplementation -> m_vertexNodesMap[dest], 
                                                    walkBussingPath);
 
-    std::cout << "Bus-Walk Time: " << walkBussingTime << std::endl;
-    std::cout << "Walk-Bus Path Size: " << walkBussingPath.size() << std::endl;
+    // std::cout << "Bus-Walk Time: " << walkBussingTime << std::endl;
+    // std::cout << "Walk-Bus Path Size: " << walkBussingPath.size() << std::endl;
 
 
     if (walkBussingTime > bikingTime) {

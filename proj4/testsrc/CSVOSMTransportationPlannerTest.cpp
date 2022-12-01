@@ -23,6 +23,7 @@ TEST(CSVOSMTransporationPlanner, SimpleTest){
     CDijkstraTransportationPlanner Planner(Config);
     std::vector< CTransportationPlanner::TNodeID > ShortestPath;
     std::vector< CTransportationPlanner::TTripStep > FastestPath;
+    EXPECT_EQ(Planner.NodeCount(), 0);
     EXPECT_EQ(Planner.FindShortestPath(0,1,ShortestPath),CPathRouter::NoPathExists);
     EXPECT_EQ(Planner.FindFastestPath(0,1,FastestPath),CPathRouter::NoPathExists);
 }

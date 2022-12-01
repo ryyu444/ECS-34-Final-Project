@@ -225,72 +225,52 @@ std::string Lower(const std::string &str) noexcept {
 }
 
 std::string LStrip(const std::string &str) noexcept {
-    // Case: Empty String - "" --> ""
-    // Case: Left white space - "    hello" --> "hello"
-    // Case: No white space - "hello" --> "hello"
-    // Case: Right white space - "hello     " --> "hello     "
 
-    if (str == "") {
-        return str;
-    }
+        std::string stripped = str;
 
-    std::string newStr;
-    int len = str.length();
-    int i = 0;
-    bool stripped = false;
-
-    while (i < len) {
-        // First char that isn't whitespace
-        if (!isspace(str[i]) && !stripped) {
-            newStr += str[i];
-            stripped = true;
+        // break when there is no more whitespace on left side
+        int i = 0;
+        while(true) {
+            if(!isspace(stripped[i]) || i == stripped.length()) {
+                break;
+            }
+            else {
+                i++;
+            }
         }
 
-        // Once first char is found --> Add rest of string
-        else if (stripped) {
-            newStr += str[i];
-        }
-        // Ignores all white space left of first char
-        i++;
-    }
-    return newStr;
+        // strip left side whitespaces using Slice()
+        stripped = Slice(stripped, i);
+
+        return stripped;
 }
 
-std::string RStrip(const std::string &str) noexcept{
-    // Case: No whitespace - "abcde" --> "abcde"
-    // Case: Right whitespace --> "abcde    " --> "abcde"
-    // Case: Empty - "" --> ""
-    // Case: Left whitespace --> "    abcde" --> "    abcde"
+std::string RStrip(const std::string &str) noexcept {
+        
+        std::string stripped = str;
 
-    if (str == "") {
-        return str;
-    }
-
-    std::string newStr;
-    int i = 0;
-    int last_char_idx = 0;
-
-    // Obtains index of last char that isn't white space
-    for (int j = 0; j < (int) str.length(); j++) {
-        if (!isspace(str[j])) {
-            last_char_idx = j;
+        // break when there is no more whitespace on left side
+        int i = str.length() - 1;
+        while(true) {
+            if(!isspace(stripped[i]) || i == 0) {
+                break;
+            }
+            else {
+                i--;
+            }
         }
-    }
 
-    if (last_char_idx == 0 && isspace(last_char_idx)) {
-        return "";
-    }
+        // strip right side whitespaces using Slice()
+        stripped = Slice(stripped, 0, i + 1);
 
-    // Gets chars up to last char
-    while (i <= last_char_idx) {
-        newStr += str[i];
-        i++;
-    }
+        if(stripped.length() == 1 && isspace(stripped[0])) {
+            return "";
+        }
 
-    return newStr;
+        return stripped;
 }
 
-std::string Strip(const std::string &str) noexcept{
+std::string Strip(const std::string &str) noexcept {
     // Case: Left Side Whitespace - "    dogs" --> "dogs"
     // Case: Right Side Whitespace - "cats    " --> "cats"
     // Case: Both Side Whitespace - "    mice    " --> "mice"
@@ -436,65 +416,44 @@ std::string RJust(const std::string &str, int width, char fill) noexcept{
     return newStr;
 }
 
-std::string Replace(const std::string &str, const std::string &old, const std::string &rep) noexcept{
-    // Case: "" --> ""
-    // Case: Old not in str --> Return str: Replace("hello", "a", "b") --> "hello"
-    // Case: Old in str --> Replace w/ rep: Replace("hello", "l", "w") --> "hewwo"
-    std::vector<char> temp, swap;
-    std::string newStr;
-    int j = 0;
-    int match = 0;
-
-    for (int i = 0; i < (int) str.length(); i++) {
-        // Keeps track of chars in old seen in a temp vector
-        if (str[i] == old[j]) {
-            match++;
-            j++;
-            temp.push_back(str[i]);
-
-            // Found old --> Appends to newStr & clears temp vector
-            if (match == (int) old.length()) {
-                newStr += rep;
-                j = 0;
-                match = 0;
-                temp.clear();
-            }
-        }
-
-        else {
-            // Reverses chars back to order
-            while (!temp.empty()) {
-                swap.push_back(temp.back());
-                temp.pop_back();
-            }
-
-            // Appends chars to newStr
-            while (!swap.empty()) {
-                newStr += swap.back();
-                swap.pop_back();
-            }
-            
-            // Resets matches & old index tracker
-            j = 0;
-            match = 0;
-            
-            // Checks if cur char is the start of the old
-            if (str[i] == old[j]) {
-                match++;
-                j++;
-                temp.push_back(str[i]);
-            }
-
-            // Appends cur char if its not the start
-            else {
-                newStr += str[i];
-            }
-        }
+std::string Replace(const std::string &str, const std::string &old, const std::string &rep) noexcept {
         
-    }
+        std::string replaced;
+        std::vector<std::string> stringQueue;
 
-    return newStr;
+        int pos;
+        std::string tmpStr = str;
+        while(true) {
+            pos = tmpStr.find(old);
+
+            if(pos != std::string::npos) {
+                // add substring before match to queue
+                if(pos > 0) {
+                    stringQueue.push_back(Slice(tmpStr, 0, pos));
+                    tmpStr = Slice(tmpStr, pos);
+                    continue;
+                }
+                // remove found match at start of string and add replacement to queue
+                tmpStr = Slice(tmpStr, old.length() - pos); 
+                stringQueue.push_back(rep);
+                //repeat
+            }
+            else {
+                // add remainder of string to queue
+                stringQueue.push_back(tmpStr);
+                break;
+            }
+
+        }
+
+        // combine queue into string
+        for(std::string elm : stringQueue) {
+            replaced += elm;
+        }
+
+        return replaced;
 }
+
 
 std::vector<std::string> Split(const std::string &str, const std::string &splt) noexcept {
         

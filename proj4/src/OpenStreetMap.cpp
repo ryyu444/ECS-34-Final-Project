@@ -178,7 +178,7 @@ struct COpenStreetMap::SImplementation {
             while (m_src -> ReadEntity(data, true)) {
                 // Node --> Store node_id, node_loc & set node = true to indicate node found
                 if (data.DNameData == "node" && data.DType == SXMLEntity::EType::StartElement) {
-                    node_id = (TNodeID) std::stoi(data.DAttributes.at(0).second);
+                    node_id = (TNodeID) std::stol(data.DAttributes.at(0).second);
                     node_loc = (TLocation) {std::stod(data.DAttributes.at(1).second), 
                                             std::stod(data.DAttributes.at(2).second)};
                     node = true;
@@ -186,13 +186,13 @@ struct COpenStreetMap::SImplementation {
 
                 // Way --> Store way_id & set way = true to indicate way found
                 else if (data.DNameData == "way" && data.DType == SXMLEntity::EType::StartElement) {
-                    way_id = (TWayID) std::stoi(data.DAttributes.at(0).second);
+                    way_id = (TWayID) std::stol(data.DAttributes.at(0).second);
                     way = true;
                 }
                 
                 // Nodes in way --> Use nodes_map to find corresponding S_Node instance to store for that way
                 else if (data.DNameData == "nd" && data.DType == SXMLEntity::EType::StartElement) {
-                    way_nodes.push_back(nodes_map.at(std::stoi(data.DAttributes.at(0).second)));
+                    way_nodes.push_back(nodes_map.at(std::stol(data.DAttributes.at(0).second)));
                 }
 
                 // Tags for nodes: Store the SXMLEntity for node
@@ -207,21 +207,19 @@ struct COpenStreetMap::SImplementation {
                 
                 // If end tag of node is read, push the node into t_nodes + insert into nodes_map for ways + clear node_atts + set node = false
                 if (node && data.DNameData == "node" && data.DType == SXMLEntity::EType::EndElement) {
-                    S_Node temp_node = S_Node(node_id, node_loc, node_atts);
-                    auto temp_node_ptr = std::make_shared<S_Node>(temp_node);
-                    t_nodes.push_back(temp_node_ptr);
-                    t_nodes_map[(TNodeID) node_id] = temp_node_ptr;
-                    nodes_map.insert(std::pair<TNodeID, S_Node>(node_id, temp_node));
+                    auto tmp = std::make_shared<S_Node>(S_Node(node_id, node_loc, node_atts));
+                    t_nodes.push_back(tmp);
+                    t_nodes_map[(TNodeID) node_id] = tmp;
+                    nodes_map.insert(std::pair<TNodeID, S_Node>(node_id, S_Node(node_id, node_loc, node_atts)));
                     node_atts.clear();
                     node = false;
                 }
 
                 // If end tag of way is read, push the way into t_ways + clear way_atts + set way = false
                 if (way && data.DNameData == "way" && data.DType == SXMLEntity::EType::EndElement) {
-                    S_Way temp_way = S_Way(way_id, way_nodes, way_atts);
-                    auto temp_way_ptr = std::make_shared<S_Way>(temp_way);
-                    t_ways.push_back(temp_way_ptr);
-                    t_ways_map[(TWayID) way_id] = temp_way_ptr;
+                    auto tmp = std::make_shared<S_Way>(S_Way(way_id, way_nodes, way_atts));
+                    t_ways.push_back(tmp);
+                    t_ways_map[(TWayID) way_id] = tmp;
                     way_nodes.clear();
                     way_atts.clear();
                     way = false;

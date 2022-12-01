@@ -110,14 +110,17 @@ bool CXMLReader::End() const {
 bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
 
     // Sets entity to be passed into the m_parser
-    std::string entityBuf;
-    char prevChar, tmpChar, peekChar;
+    std::vector<char> entityBuf, tmpCharBuf;
+    char prevChar, peekChar;
     bool openTag = false, closeTag = false, complete = false, end = false;
 
     while (!DImplementation-> m_src -> End()) {
         // Gets tags by char
-        DImplementation -> m_src -> Get(tmpChar);
-        entityBuf += tmpChar;
+        if(DImplementation -> m_src -> Read(tmpCharBuf, 4096)) {
+            // entityBuf += tmpCharBuf;
+            entityBuf.insert(entityBuf.end(), tmpCharBuf.begin(), tmpCharBuf.end());
+        }
+        tmpCharBuf.clear();
     }
 
     // std::cout << "entityBuf: " << entityBuf.c_str() << "\n";
@@ -125,7 +128,7 @@ bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
     // std::cout << "End?: " << !DImplementation-> m_src -> End() << "\n";
 
     // Throw into expat m_parser to handle the parsing
-    bool parsed = XML_Parse(DImplementation -> m_parser, entityBuf.c_str(), entityBuf.length(), !DImplementation-> m_src -> End());
+    bool parsed = XML_Parse(DImplementation -> m_parser, entityBuf.data(), entityBuf.size(), !DImplementation-> m_src -> End());
     // std::cout << "Parsed?: " << parsed << "\n";
     
     if(SImplementation::s_entities.size() > 0) {
@@ -154,7 +157,7 @@ bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
         }
 
     }
-    else if (entityBuf.size() == 0 || entityBuf == "<></>") {
+    else if (entityBuf.size() == 0 || std::string(entityBuf.begin(), entityBuf.end()) == "<></>") {
         return false;
     }
 

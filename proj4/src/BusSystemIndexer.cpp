@@ -80,13 +80,18 @@ std::shared_ptr<CBusSystem::SStop> CBusSystemIndexer::StopByNodeID(CStreetMap::T
 
 bool CBusSystemIndexer::RoutesByNodeIDs(CStreetMap::TNodeID src, CStreetMap::TNodeID dest, std::unordered_set<std::shared_ptr<CBusSystem::SRoute> > &routes) const noexcept {
 
-    CBusSystem::TStopID stopIDSrc = DImplementation->m_stopsByNodeIDMap[src]->ID();
-    CBusSystem::TStopID stopIDDest = DImplementation->m_stopsByNodeIDMap[dest]->ID();
-
+    // Could be accessing invalid TNodeIDs
+    if (DImplementation -> m_stopsByNodeIDMap.find(src) == DImplementation -> m_stopsByNodeIDMap.end() || 
+        DImplementation -> m_stopsByNodeIDMap.find(dest) == DImplementation -> m_stopsByNodeIDMap.end()) {
+        return false;
+    }
     // check if routes empty or not
     if (DImplementation->m_sortedRoutesByName.size() == 0) {
         return false;
     }
+    
+    CBusSystem::TStopID stopIDSrc = DImplementation->m_stopsByNodeIDMap[src] -> ID();
+    CBusSystem::TStopID stopIDDest = DImplementation->m_stopsByNodeIDMap[dest] -> ID();
 
     bool foundRoute = false;
 

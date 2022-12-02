@@ -159,7 +159,7 @@ TEST(TransporationPlannerCommandLine, FastestTest){
     CTransportationPlannerCommandLine CommandLine(InputSource,OutputSink,ErrorSink,MockFactory,MockPlanner);
 
     EXPECT_TRUE(CommandLine.ProcessCommands());
-    EXPECT_EQ(OutputSink->String(),"> "
+    EXPECT_EQ(OutputSink->String(), "> "
                                     "Fastest path takes 39 min.\n"
                                     "> ");
     EXPECT_TRUE(ErrorSink->String().empty());

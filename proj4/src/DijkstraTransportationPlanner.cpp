@@ -127,6 +127,10 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
         3) Calculate the distance between the nodes
         4) Add edges between the vertices with the distance as the weight
         */
+        
+        // Distance Vector to store min distances of each vertex
+        std::vector<double> distances(DImplementation -> m_vertexNodesMap.size(), CPathRouter::NoPathExists);
+        
         for (int k = 0; k < DImplementation -> m_streetMap -> WayCount(); k++) {
             
             std::shared_ptr<CStreetMap::SWay> curr_way = DImplementation -> m_streetMap -> WayByIndex(k);
@@ -147,10 +151,15 @@ double CDijkstraTransportationPlanner::FindShortestPath(TNodeID src, TNodeID des
                 // std::cout << "currVert id: " << DImplementation -> m_vertexNodesMap[curr_nodeID] << std::endl; 
                 // std::cout << "nextVert id: " << DImplementation -> m_vertexNodesMap[next_nodeID] << std::endl; 
                 // std::cout << "dist: " << dist << std::endl;
-                
-                DImplementation -> m_shortestPathGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
-                                                                  DImplementation -> m_vertexNodesMap[next_nodeID], 
-                                                                  dist, !isOneWay);
+
+                // 1) Only add new edge to nextNode if the calculated dist is less than the existing min dist
+                // 2) Update the min dist to that nextNode
+                if (dist < distances[DImplementation -> m_vertexNodesMap[next_nodeID]]) {                    
+                    DImplementation -> m_shortestPathGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 
+                                                                     DImplementation -> m_vertexNodesMap[next_nodeID], 
+                                                                     dist, !isOneWay);
+                    distances[DImplementation -> m_vertexNodesMap[next_nodeID]] = dist;
+                }
             }
         }
 
@@ -204,6 +213,7 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
         // std::cout << "Speed limit: " << speedLimit << std::endl;
 
         // Ways - Used for biking & walking
+        
         for (int k = 0; k < DImplementation -> m_streetMap -> WayCount(); k++) {
             
             std::shared_ptr<CStreetMap::SWay> curr_way = DImplementation -> m_streetMap -> WayByIndex(k);
@@ -232,7 +242,8 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
 
                 std::shared_ptr<CStreetMap::SNode> curr_node = DImplementation -> m_streetMap -> NodeByID(curr_nodeID);
                 std::shared_ptr<CStreetMap::SNode> next_node = DImplementation -> m_streetMap -> NodeByID(next_nodeID);
-
+                
+                // Seg Fault here
                 std::unordered_set<std::shared_ptr<CBusSystem::SRoute>> busRoutes;
                 DImplementation -> m_busSystemIndexer -> RoutesByNodeIDs(curr_nodeID, next_nodeID, busRoutes);
                 // for (auto i : busRoutes) {
@@ -276,8 +287,8 @@ double CDijkstraTransportationPlanner::FindFastestPath(TNodeID src, TNodeID dest
                                                                     ETransportationMode::Bus));
                     // std::cout << "Adj Edges after: " << DImplementation -> m_busWalkEdgeData[curr_nodeID].size() << std::endl;
                     // std::cout << "currNode: " << curr_nodeID << ", EdgeData: (" << DImplementation -> m_busWalkEdgeData[curr_nodeID][0].m_nextNodeID << ", " << DImplementation -> m_busWalkEdgeData[curr_nodeID][0].m_time << ")\n";
-
                 }
+
                 else {
                     // std::cout << "Not added" << std::endl;
                     DImplementation -> m_fastestBusWalkGraph -> AddEdge(DImplementation -> m_vertexNodesMap[curr_nodeID], 

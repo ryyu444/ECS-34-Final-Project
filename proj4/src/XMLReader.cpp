@@ -1,5 +1,6 @@
 #include "XMLReader.h"
 #include <expat.h>
+#include <deque>
 #include <iostream>
 
 struct CXMLReader::SImplementation {
@@ -9,9 +10,7 @@ struct CXMLReader::SImplementation {
         XML_Parser m_parser;
         static std::string c_data;
 
-        static std::vector<SXMLEntity> s_entities;
-
-        // bool m_isEmp
+        static std::deque<std::shared_ptr<SXMLEntity>> s_entities;
 
         void m_startElement(const char* name, const char* atts[]) {
             SXMLEntity tmpEntity;
@@ -22,7 +21,7 @@ struct CXMLReader::SImplementation {
             for (int i = 0; atts[i]; i += 2) {
                 tmpEntity.SetAttribute(atts[i], atts[i+1]);
             }
-            SImplementation::s_entities.push_back(tmpEntity);
+            SImplementation::s_entities.push_back(std::make_shared<SXMLEntity>(tmpEntity));
         }
 
         void m_endElement(const char* name) {
@@ -31,7 +30,7 @@ struct CXMLReader::SImplementation {
 
             tmpEntity.DNameData = name;
             tmpEntity.DType = SXMLEntity::EType::EndElement;
-            SImplementation::s_entities.push_back(tmpEntity);
+            SImplementation::s_entities.push_back(std::make_shared<SXMLEntity>(tmpEntity));
         }
 
         void m_charValue(const char* s, int len) {
@@ -45,7 +44,7 @@ struct CXMLReader::SImplementation {
                 SXMLEntity cEntity;
                 cEntity.DNameData = c_data;
                 cEntity.DType = SXMLEntity::EType::CharData;
-                SImplementation::s_entities.push_back(cEntity);
+                SImplementation::s_entities.push_back(std::make_shared<SXMLEntity>(cEntity));
                 c_data = "";
             }
         }
@@ -66,7 +65,7 @@ struct CXMLReader::SImplementation {
 
 };
 
-std::vector<SXMLEntity> CXMLReader::SImplementation::s_entities = {};
+std::deque<std::shared_ptr<SXMLEntity>> CXMLReader::SImplementation::s_entities = {};
 
 std::string CXMLReader::SImplementation::c_data = "";
 
@@ -126,6 +125,8 @@ bool CXMLReader::End() const {
 // skipcdata: Skips only CharData if true
 bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
 
+    // std::cout << "Entity Size: " << SImplementation::s_entities.size() << std::endl;
+
     if (SImplementation::s_entities.size() == 0) {
         return false;
     }
@@ -133,15 +134,13 @@ bool CXMLReader::ReadEntity(SXMLEntity &entity, bool skipcdata) {
 
         // if skipcdata == true -> remove charData from entities vector
         if(skipcdata) {
-            for(int i = 0; i < SImplementation::s_entities.size(); i++) {
-                if(SImplementation::s_entities[i].DType == SXMLEntity::EType::CharData) {
-                    SImplementation::s_entities.erase(SImplementation::s_entities.begin()+i);
-                }
+            while (SImplementation::s_entities[0] -> DType == SXMLEntity::EType::CharData) {
+                SImplementation::s_entities.pop_front();
             }
         }
 
-        entity = SImplementation::s_entities[0];
-        SImplementation::s_entities.erase(SImplementation::s_entities.begin());
+        entity = *SImplementation::s_entities[0];
+        SImplementation::s_entities.pop_front();
 
     }
 

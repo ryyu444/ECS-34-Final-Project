@@ -1,6 +1,5 @@
 #include "DijkstraPathRouter.h"
 #include <unordered_map>
-#include <deque>
 #include <algorithm>
 
 #include <iostream>
@@ -8,7 +7,7 @@
 struct SVertex {
     CPathRouter::TVertexID m_id;
     std::any m_tag;
-    std::vector<std::pair<SVertex, double>> m_adjacents;
+    std::unordered_map<CPathRouter::TVertexID, double> m_adjacents;
 
     SVertex(CPathRouter::TVertexID id, std::any tag) {
         m_id = id;
@@ -56,7 +55,7 @@ bool CDijkstraPathRouter::AddEdge(CPathRouter::TVertexID src, CPathRouter::TVert
         return false;
     }
     
-    DImplementation -> m_graph[src].m_adjacents.push_back(std::make_pair(DImplementation -> m_graph[dest], weight));
+    DImplementation -> m_graph[src].m_adjacents[dest] = weight;
     
     if (bidir) {
         AddEdge(dest, src, weight, false);
@@ -115,24 +114,26 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
         // std::cout << "Adj Size: " << DImplementation -> m_graph[currVertexID].m_adjacents.size() << std::endl;
         // std::cout << "real adj Size: " << DImplementation->m_graph[src].m_adjacents.size() << std::endl;
 
-        for (int i = 0; i < DImplementation -> m_graph[currVertexID].m_adjacents.size(); i++) {
-            // Vertex has been visited 
+        for (auto entry : DImplementation -> m_graph[currVertexID].m_adjacents) {
+            // Vertex has been visited
+            auto key = entry.first;
+            auto weight = entry.second;
             // std::cout << " Adj ID: " << DImplementation -> m_graph[currVertexID].m_adjacents[i].first.m_id << std::endl;
-            if (visited[DImplementation -> m_graph[currVertexID].m_adjacents[i].first.m_id]) {
+            if (visited[key]) {
                 continue;
             }
             // Otherwise, add to min heap & calculate dist
             // Calculate dist w/ weight of currVertx - weight of adj + dist of currVertex
             else {
                 // Cur Vertex dist + Adj vertex dist
-                double dist = distances[currVertexID] + DImplementation -> m_graph[currVertexID].m_adjacents[i].second;
+                double dist = distances[currVertexID] + weight;
                 
-                if (dist < distances[DImplementation -> m_graph[currVertexID].m_adjacents[i].first.m_id]) {
-                    distances[DImplementation -> m_graph[currVertexID].m_adjacents[i].first.m_id] = dist;
-                    prevVertex[DImplementation -> m_graph[currVertexID].m_adjacents[i].first.m_id] = currVertexID;
+                if (dist < distances[key]) {
+                    distances[key] = dist;
+                    prevVertex[key] = currVertexID;
                 }
 
-                vertDistFromSource.push_back(DImplementation -> m_graph[currVertexID].m_adjacents[i].first);
+                vertDistFromSource.push_back(DImplementation->m_graph[key]);
                 std::push_heap(vertDistFromSource.begin(), vertDistFromSource.end(), minHeapCmp);
 
                 // std::cout << "vertDistFromSource: ";

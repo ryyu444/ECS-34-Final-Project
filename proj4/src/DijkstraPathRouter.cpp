@@ -55,7 +55,14 @@ bool CDijkstraPathRouter::AddEdge(CPathRouter::TVertexID src, CPathRouter::TVert
         return false;
     }
     
+    auto minWeight = [](auto &adj1, auto &adj2) {
+        return adj1.second > adj2.second;
+    };
+
     DImplementation -> m_graph[src].m_adjacents[dest] = weight;
+    std::sort(DImplementation -> m_graph[src].m_adjacents.begin(), 
+              DImplementation -> m_graph[src].m_adjacents.end(),
+              minWeight);
     
     if (bidir) {
         AddEdge(dest, src, weight, false);

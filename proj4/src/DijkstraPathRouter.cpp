@@ -22,10 +22,12 @@ struct CDijkstraPathRouter::SImplementation {
             }
         };
 
-        std::vector<std::shared_ptr<SImplementation::SVertex>> m_graph; // collection of all vertices in graph
-        
+        std::vector<std::shared_ptr<SImplementation::SVertex>> m_vertices; // collection of all vertices in graph
+        // std::vector<std::unordered_map<std::shared_ptr<SImplementation::SVertex>, double>> m_edgeWeights;
+
         SImplementation() {
-            m_graph = {};
+            m_vertices = {};
+            // m_edgeWeights = {};
         };
 };
 
@@ -36,32 +38,33 @@ CDijkstraPathRouter::CDijkstraPathRouter() {
 CDijkstraPathRouter::~CDijkstraPathRouter() {}
 
 std::size_t CDijkstraPathRouter::VertexCount() const noexcept {
-    return DImplementation -> m_graph.size();
+    return DImplementation -> m_vertices.size();
 }
 
 CPathRouter::TVertexID CDijkstraPathRouter::AddVertex(std::any tag) noexcept {
     std::shared_ptr<SImplementation::SVertex> tmpVertex = 
-        std::make_shared<SImplementation::SVertex>(DImplementation -> m_graph.size(), tag);
-    DImplementation -> m_graph.push_back(tmpVertex);
+        std::make_shared<SImplementation::SVertex>(DImplementation -> m_vertices.size(), tag);
+    DImplementation -> m_vertices.push_back(tmpVertex);
     return tmpVertex -> m_id;
 }
 
 std::any CDijkstraPathRouter::GetVertexTag(CPathRouter::TVertexID id) const noexcept {
-    if(id >= DImplementation -> m_graph.size()) {
+    if(id >= DImplementation -> m_vertices.size()) {
         return std::any();
     }
-    return DImplementation -> m_graph[id] -> m_tag;
+    return DImplementation -> m_vertices[id] -> m_tag;
 }
 
 bool CDijkstraPathRouter::AddEdge(CPathRouter::TVertexID src, CPathRouter::TVertexID dest, double weight, bool bidir) noexcept {
     
-    if (src >= DImplementation -> m_graph.size() || dest >= DImplementation -> m_graph.size() || weight < 0) {
+    if (src >= DImplementation -> m_vertices.size() || dest >= DImplementation -> m_vertices.size() || weight < 0) {
         return false;
     }
     
-    std::shared_ptr<SImplementation::SVertex> srcVertex = DImplementation -> m_graph[src];
-    std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_graph[dest];
-    srcVertex -> m_adjacents.push_back(std::make_pair(destVertex, weight));
+    std::shared_ptr<SImplementation::SVertex> srcVertex = DImplementation -> m_vertices[src];
+    std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_vertices[dest];
+    srcVertex -> m_adjacents.push_back(std::pair(destVertex, weight));
+    // DImplementation -> m_edgeWeights[srcVertex][destVertex] = weight;
     
     if (bidir) {
         AddEdge(dest, src, weight, false);
@@ -84,21 +87,25 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
 
     path.clear();
 
-    if (src >= DImplementation -> m_graph.size() || dest >= DImplementation -> m_graph.size()) {
+    if (src >= DImplementation -> m_vertices.size() || dest >= DImplementation -> m_vertices.size()) {
         return NoPathExists;
     }
 
-    std::shared_ptr<SImplementation::SVertex> srcVertex = DImplementation -> m_graph[src];
-    std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_graph[dest];
+    std::shared_ptr<SImplementation::SVertex> srcVertex = DImplementation -> m_vertices[src];
+    std::shared_ptr<SImplementation::SVertex> destVertex = DImplementation -> m_vertices[dest];
 
     std::vector<std::shared_ptr<SImplementation::SVertex>> toVisit = {srcVertex};
-    std::vector<std::shared_ptr<SImplementation::SVertex>> prevVertex(DImplementation -> m_graph.size(), nullptr);
-    std::vector<bool> visited(DImplementation -> m_graph.size(), false);
-    std::vector<double> distances(DImplementation -> m_graph.size(), CPathRouter::NoPathExists);
-    std::unordered_map<TVertexID, double> numEdges;
+    std::vector<std::shared_ptr<SImplementation::SVertex>> prevVertex(DImplementation -> m_vertices.size(), nullptr);
+    std::vector<bool> visited(DImplementation -> m_vertices.size(), false);
+    std::vector<double> distances(DImplementation -> m_vertices.size(), CPathRouter::NoPathExists);
+    std::unordered_map<TVertexID, std::unordered_map<TVertexID, bool>> numEdges;
     TVertexID prevVertexID = InvalidVertexID;
     distances[src] = 0;
-    numEdges[src] = 0;
+    // numEdges[src] = 0;
+
+    // for (int i = 0; i < DImplementation -> m_graph.size() < i++) {
+    //     toVisit.push_back(DImplementation -> m_vertices[i]);
+    // }
 
     auto sortDistMin = [&distances](auto &vert1, auto &vert2) {
         // std::cout << "sorting: " << vert1->m_id << ", " << vert2->m_id << std::endl;
@@ -139,13 +146,14 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
             // Adding duplicate edges
             if (!visited[currVertex->m_adjacents[j].first->m_id] 
                 && prevVertexID != currVertex -> m_adjacents[j].first -> m_id
+                && !numEdges[currVertex -> m_id][currVertex -> m_adjacents[j].first -> m_id]
                 ) {
                 // std::cout << "Adj ID: " << currVertex->m_adjacents[j].first -> m_id << std::endl;
                 toVisit.push_back(currVertex->m_adjacents[j].first);
-                std::push_heap(toVisit.begin(), toVisit.end(), sortDistMin);
-                // numEdges[currVertex -> m_adjacents[j].first -> m_id]++;
+                numEdges[currVertex -> m_id][currVertex -> m_adjacents[j].first -> m_id] = true;
             }
         }
+        std::push_heap(toVisit.begin(), toVisit.end(), sortDistMin);
         prevVertexID = currVertex -> m_id;
         // std::cout << std::endl;
     }

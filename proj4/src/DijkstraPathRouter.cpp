@@ -129,7 +129,6 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
             // std::cout << "Adj Vertex ID: " << currVertex->m_adjacents[j] -> m_id << std::endl;
             TVertexID adjVertID = currVertex->m_adjacents[j] -> m_id;
             double tmpDist = distances[currVertex->m_id] + DImplementation -> m_edgeWeights[currVertex->m_id][adjVertID];
-            // currVertex->m_adjacents[j].m_id;
             // std::cout << "Distances: (" << tmpDist << ", " << distances[currVertex->m_adjacents[j].first->m_id] << ")" << std::endl;
             
             // Check if new calculated dist is shorter than existing path to adj vertex

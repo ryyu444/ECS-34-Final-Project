@@ -170,14 +170,14 @@ TEST(DjikstraPathRouterTest, FindShortestPath) {
         EXPECT_EQ(DPRouter.AddVertex(nd4), 3);
         EXPECT_EQ(DPRouter.AddVertex(nd5), 4);
 
-        EXPECT_TRUE(DPRouter.AddEdge(0, 1, 1, true));
+        EXPECT_TRUE(DPRouter.AddEdge(0, 1, 3, true));
         EXPECT_TRUE(DPRouter.AddEdge(1, 2, 1, true));
-        EXPECT_TRUE(DPRouter.AddEdge(2, 3, 1, true));
-        EXPECT_TRUE(DPRouter.AddEdge(3, 4, 1, true));
+        EXPECT_TRUE(DPRouter.AddEdge(2, 3, 2, true));
+        EXPECT_TRUE(DPRouter.AddEdge(3, 4, 5, true));
         EXPECT_TRUE(DPRouter.AddEdge(4, 0, 100));
 
         expectedPath = {1, 2, 3}; 
-        EXPECT_EQ(DPRouter.FindShortestPath(1, 3, path), 2);
+        EXPECT_EQ(DPRouter.FindShortestPath(1, 3, path), 3);
         EXPECT_EQ(path, expectedPath);
 
         expectedPath = {1}; 
@@ -185,7 +185,7 @@ TEST(DjikstraPathRouterTest, FindShortestPath) {
         EXPECT_EQ(path, expectedPath);
 
         expectedPath = {4, 3, 2, 1, 0}; 
-        EXPECT_EQ(DPRouter.FindShortestPath(4, 0, path), 4);
+        EXPECT_EQ(DPRouter.FindShortestPath(4, 0, path), 11);
         EXPECT_EQ(path, expectedPath);
     }
 
@@ -239,6 +239,28 @@ TEST(DjikstraPathRouterTest, MoreTests) {
 
         expectedPath = {};
         EXPECT_EQ(DPRouter.FindShortestPath(1, 3, path), CPathRouter::NoPathExists);
+        EXPECT_EQ(path, expectedPath);
+        
+    }
+
+    {
+
+        CDijkstraPathRouter DPRouter = CDijkstraPathRouter();
+        
+        for (int i = 0; i <= 3; i++) {
+            DPRouter.AddVertex(i);
+        }
+
+        DPRouter.AddEdge(0, 1, 1, true);
+        DPRouter.AddEdge(1, 3, 3, true);
+        DPRouter.AddEdge(1, 2, 2, true);
+        
+        expectedPath = {0, 1, 2};
+        EXPECT_EQ(DPRouter.FindShortestPath(0, 2, path), 3);
+        EXPECT_EQ(path, expectedPath);
+
+        expectedPath = {0, 1, 3};
+        EXPECT_EQ(DPRouter.FindShortestPath(0, 3, path), 4);
         EXPECT_EQ(path, expectedPath);
         
     }

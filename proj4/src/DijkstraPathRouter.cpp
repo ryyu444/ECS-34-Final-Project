@@ -11,7 +11,7 @@ struct CDijkstraPathRouter::SImplementation {
         struct SVertex {
             CPathRouter::TVertexID m_id;
             std::any m_tag;
-            std::vector<std::pair<std::shared_ptr<SImplementation::SVertex, double>> m_adjacents;
+            std::vector<std::pair<std::shared_ptr<SImplementation::SVertex>, double>> m_adjacents;
             // std::vector<std::vector<double>>
             // vector[VertexID][ADJVertexID] = weight;
 
@@ -136,6 +136,7 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
             }
 
             std::cout << "Visited: " << visited[currVertex->m_adjacents[j].first->m_id] << std::endl;
+            // Adding duplicate edges
             if (!visited[currVertex->m_adjacents[j].first->m_id] 
                 && prevVertexID != currVertex -> m_adjacents[j].first -> m_id
                 ) {

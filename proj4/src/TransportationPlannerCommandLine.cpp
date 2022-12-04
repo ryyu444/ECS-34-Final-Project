@@ -237,8 +237,7 @@ bool CTransportationPlannerCommandLine::ProcessCommands() {
                 // time = 0 --> No path found
                 double time = DImplementation -> m_planner -> FindFastestPath(srcID, destID, 
                                                                               g_fastestPath);
-                g_timeFastest = time;
-                if (time == 0) {
+                if (time == 0 || time == CPathRouter::NoPathExists) {
                     std::string no_path_msg = "Unable to find fastest path from " + std::to_string(srcID) + 
                                               " to " + std::to_string(destID) + ".\n";
                     std::cerr << no_path_msg;
@@ -281,6 +280,7 @@ bool CTransportationPlannerCommandLine::ProcessCommands() {
                     g_lastChecked = 1;
                     g_lastSrcID = srcID;
                     g_lastDestID = destID;
+                    g_timeFastest = time;
                 }
             }
             
@@ -326,9 +326,8 @@ bool CTransportationPlannerCommandLine::ProcessCommands() {
                 // time = 0 --> No path found
                 double dist = DImplementation -> m_planner -> FindShortestPath(srcID, destID, 
                                                                                g_shortestPath);
-                g_distShortest = dist;
                 // std::cout << "Distance: " << dist << std::endl;
-                if (dist == 0) {
+                if (dist == 0 || dist == CPathRouter::NoPathExists) {
                     std::string no_path_msg = "Unable to find shortest path from " + std::to_string(srcID) + 
                                               " to " + std::to_string(destID) + ".\n";
                     std::cerr << no_path_msg;
@@ -357,6 +356,7 @@ bool CTransportationPlannerCommandLine::ProcessCommands() {
                     g_lastChecked = 0;
                     g_lastSrcID = srcID;
                     g_lastDestID = destID;
+                    g_distShortest = dist;
                 }
             }
         }

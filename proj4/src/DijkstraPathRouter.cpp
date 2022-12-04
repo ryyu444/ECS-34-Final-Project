@@ -100,18 +100,6 @@ double CDijkstraPathRouter::FindShortestPath(CPathRouter::TVertexID src, CPathRo
     std::vector<double> distances(DImplementation -> m_vertices.size(), CPathRouter::NoPathExists);
     // std::unordered_map<TVertexID, std::unordered_map<TVertexID, bool>> numEdges;
     distances[src] = 0;
-    // prevVertex[src] = DImplementation -> m_vertices[src];
-
-    // for (int i = 0; i < DImplementation -> m_vertices[src] -> m_adjacents.size(); i++) {
-    //     TVertexID adjID = DImplementation -> m_vertices[src] -> m_adjacents[i] -> m_id;
-    //     distances[adjID] = DImplementation -> m_edgeWeights[src][adjID]; 
-    // }
-
-    // for (int i = 0; i < DImplementation -> m_vertices.size(); i++) {
-    //     if (DImplementation -> m_vertices[i] != srcVertex) {
-    //         toVisit.push_back(DImplementation -> m_vertices[i]);
-    //     }
-    // }
 
     auto sortDistMin = [&distances](auto &vert1, auto &vert2) {
         // std::cout << "sorting: " << vert1->m_id << ", " << vert2->m_id << std::endl;
